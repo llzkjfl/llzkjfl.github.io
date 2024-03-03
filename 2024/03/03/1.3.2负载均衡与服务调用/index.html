@@ -16,24 +16,27 @@
   <meta name="author" content="coder刘">
   <meta name="keywords" content="">
   
-    <meta name="description" content="宗旨约定&gt;配置&gt;编码  一.配置要求1234mysql 8.0+ spring boot 3.2.0maven 3.9.0jdk 17  二.相关组件1234567注册服务与发现:Nacos服务调用与负载均衡:OpenFeign&#x2F;LoadBalancer分布式事务:Seata服务熔断和降级:Circuit Breaker(理念)-&gt;Resilience4J(实现)&#x2F;Sentine">
+    <meta name="description" content="OpenFeign负载均衡与服务调用一.基本信息 openFeign官网 openFeign是一个声明式的web服务的客户端，在接口上加注解@FeignClient，支持包含LoadBalancer组件 OpenFeign能干什么 前面在使用SpringCloud LoadBalancer+RestTemplate时，利用RestTemplate对http请求的封装处理形成了一套模版化的调用方法。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="1.1  深入Spring Cloud 与 Spring Cloud Alibaba --序言">
-<meta property="og:url" content="https://llzkjfl.github.io/2024/02/28/1.1.1%E5%BE%AE%E6%9C%8D%E5%8A%A1/index.html">
+<meta property="og:title" content="3.2 服务调用与负载均衡——OpenFeign">
+<meta property="og:url" content="https://llzkjfl.github.io/2024/03/03/1.3.2%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E4%B8%8E%E6%9C%8D%E5%8A%A1%E8%B0%83%E7%94%A8/index.html">
 <meta property="og:site_name" content="正流离">
-<meta property="og:description" content="宗旨约定&gt;配置&gt;编码  一.配置要求1234mysql 8.0+ spring boot 3.2.0maven 3.9.0jdk 17  二.相关组件1234567注册服务与发现:Nacos服务调用与负载均衡:OpenFeign&#x2F;LoadBalancer分布式事务:Seata服务熔断和降级:Circuit Breaker(理念)-&gt;Resilience4J(实现)&#x2F;Sentine">
+<meta property="og:description" content="OpenFeign负载均衡与服务调用一.基本信息 openFeign官网 openFeign是一个声明式的web服务的客户端，在接口上加注解@FeignClient，支持包含LoadBalancer组件 OpenFeign能干什么 前面在使用SpringCloud LoadBalancer+RestTemplate时，利用RestTemplate对http请求的封装处理形成了一套模版化的调用方法。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://llzkjfl.github.io/assets/image-20240229002608785.png">
-<meta property="article:published_time" content="2024-02-28T14:37:33.871Z">
-<meta property="article:modified_time" content="2024-03-03T15:19:14.626Z">
+<meta property="og:image" content="https://llzkjfl.github.io/assets/image-20240303221623539.png">
+<meta property="og:image" content="https://llzkjfl.github.io/assets/image-20240303231059168.png">
+<meta property="og:image" content="https://llzkjfl.github.io/assets/image-20240303231239956.png">
+<meta property="article:published_time" content="2024-03-03T15:23:22.321Z">
+<meta property="article:modified_time" content="2024-03-03T15:24:06.443Z">
 <meta property="article:author" content="coder刘">
-<meta property="article:tag" content="微服务">
+<meta property="article:tag" content="服务调用">
+<meta property="article:tag" content="负载均衡">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://llzkjfl.github.io/assets/image-20240229002608785.png">
+<meta name="twitter:image" content="https://llzkjfl.github.io/assets/image-20240303221623539.png">
   
   
   
-  <title>1.1  深入Spring Cloud 与 Spring Cloud Alibaba --序言 - 正流离</title>
+  <title>3.2 服务调用与负载均衡——OpenFeign - 正流离</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -199,7 +202,7 @@
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="1.1  深入Spring Cloud 与 Spring Cloud Alibaba --序言"></span>
+            <span id="subtitle" data-typed-text="3.2 服务调用与负载均衡——OpenFeign"></span>
           
         </div>
 
@@ -210,8 +213,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2024-02-28 22:37" pubdate>
-          2024年2月28日 晚上
+        <time datetime="2024-03-03 23:23" pubdate>
+          2024年3月3日 晚上
         </time>
       </span>
     
@@ -222,7 +225,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          445 字
+          838 字
         
       </span>
     
@@ -233,7 +236,7 @@
         
         
         
-          4 分钟
+          7 分钟
         
       </span>
     
@@ -270,33 +273,45 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">1.1  深入Spring Cloud 与 Spring Cloud Alibaba --序言</h1>
+            <h1 id="seo-header">3.2 服务调用与负载均衡——OpenFeign</h1>
             
             
               <div class="markdown-body">
                 
-                <h3 id="宗旨"><a href="#宗旨" class="headerlink" title="宗旨"></a>宗旨</h3><p><mark>约定&gt;配置&gt;编码 </mark></p>
-<h3 id="一-配置要求"><a href="#一-配置要求" class="headerlink" title="一.配置要求"></a>一.配置要求</h3><figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">mysql</span> <span class="hljs-number">8</span>.<span class="hljs-number">0</span>+ <br><span class="hljs-attribute">spring</span> boot <span class="hljs-number">3</span>.<span class="hljs-number">2</span>.<span class="hljs-number">0</span><br><span class="hljs-attribute">maven</span> <span class="hljs-number">3</span>.<span class="hljs-number">9</span>.<span class="hljs-number">0</span><br><span class="hljs-attribute">jdk</span> <span class="hljs-number">17</span><br></code></pre></td></tr></table></figure>
-
-<h3 id="二-相关组件"><a href="#二-相关组件" class="headerlink" title="二.相关组件"></a>二.相关组件</h3><figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs elixir">注册服务与发现<span class="hljs-symbol">:Nacos</span><br>服务调用与负载均衡<span class="hljs-symbol">:OpenFeign/LoadBalancer</span><br>分布式事务<span class="hljs-symbol">:Seata</span><br>服务熔断和降级<span class="hljs-symbol">:Circuit</span> <span class="hljs-title class_">Breaker</span>(理念)-&gt;<span class="hljs-title class_">Resilience4J</span>(实现)/<span class="hljs-title class_">Sentinel</span><br>服务链路追踪<span class="hljs-symbol">:Micrometer</span> <span class="hljs-title class_">Tracing</span><br>服务网关<span class="hljs-symbol">:Gateway</span><br>分布式配置管理<span class="hljs-symbol">:Nacos</span><br></code></pre></td></tr></table></figure>
-
-<h3 id="三-父工程pom"><a href="#三-父工程pom" class="headerlink" title="三.父工程pom"></a>三.父工程pom</h3><ul>
-<li><strong>注意dependencyManagement的作用(父申明,子引用)</strong><figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-section">&lt;properties&gt;</span><br>    <span class="hljs-section">&lt;maven.compiler.source&gt;</span><span class="hljs-attribute">17</span>&lt;/maven.compiler.source&gt;<br>    <span class="hljs-section">&lt;maven.compiler.target&gt;</span><span class="hljs-attribute">17</span>&lt;/maven.compiler.target&gt;<br>    <span class="hljs-section">&lt;project.build.sourceEncoding&gt;</span><span class="hljs-attribute">UTF</span>-<span class="hljs-number">8</span>&lt;/project.build.sourceEncoding&gt;<br>    <span class="hljs-section">&lt;hutool.version&gt;</span><span class="hljs-attribute">5</span>.<span class="hljs-number">8</span>.<span class="hljs-number">22</span>&lt;/hutool.version&gt;<br>    <span class="hljs-section">&lt;lombok.version&gt;</span><span class="hljs-attribute">1</span>.<span class="hljs-number">18</span>.<span class="hljs-number">26</span>&lt;/lombok.version&gt;<br>    <span class="hljs-section">&lt;druid.version&gt;</span><span class="hljs-attribute">1</span>.<span class="hljs-number">1</span>.<span class="hljs-number">20</span>&lt;/druid.version&gt;<br>    <span class="hljs-section">&lt;mybatis.springboot.version&gt;</span><span class="hljs-attribute">3</span>.<span class="hljs-number">0</span>.<span class="hljs-number">2</span>&lt;/mybatis.springboot.version&gt;<br>    <span class="hljs-section">&lt;mysql.version&gt;</span><span class="hljs-attribute">8</span>.<span class="hljs-number">0</span>.<span class="hljs-number">11</span>&lt;/mysql.version&gt;<br>    <span class="hljs-section">&lt;swagger3.version&gt;</span><span class="hljs-attribute">2</span>.<span class="hljs-number">2</span>.<span class="hljs-number">0</span>&lt;/swagger3.version&gt;<br>    <span class="hljs-section">&lt;mapper.version&gt;</span><span class="hljs-attribute">4</span>.<span class="hljs-number">2</span>.<span class="hljs-number">3</span>&lt;/mapper.version&gt;<br>    <span class="hljs-section">&lt;fastjson2.version&gt;</span><span class="hljs-attribute">2</span>.<span class="hljs-number">0</span>.<span class="hljs-number">40</span>&lt;/fastjson2.version&gt;<br>    <span class="hljs-section">&lt;persistence-api.version&gt;</span><span class="hljs-attribute">1</span>.<span class="hljs-number">0</span>.<span class="hljs-number">2</span>&lt;/persistence-api.version&gt;<br>    <span class="hljs-section">&lt;spring.boot.test.version&gt;</span><span class="hljs-attribute">3</span>.<span class="hljs-number">1</span>.<span class="hljs-number">5</span>&lt;/spring.boot.test.version&gt;<br>    <span class="hljs-section">&lt;spring.boot.version&gt;</span><span class="hljs-attribute">3</span>.<span class="hljs-number">2</span>.<span class="hljs-number">0</span>&lt;/spring.boot.version&gt;<br>    <span class="hljs-section">&lt;spring.cloud.version&gt;</span><span class="hljs-attribute">2023</span>.<span class="hljs-number">0</span>.<span class="hljs-number">0</span>&lt;/spring.cloud.version&gt;<br>    <span class="hljs-section">&lt;spring.cloud.alibaba.version&gt;</span><span class="hljs-attribute">2022</span>.<span class="hljs-number">0</span>.<span class="hljs-number">0</span>.<span class="hljs-number">0</span>-RC2&lt;/spring.cloud.alibaba.version&gt;<br><span class="hljs-section">&lt;/properties&gt;</span><br></code></pre></td></tr></table></figure></li>
-</ul>
-<h3 id="四-基础表及代码生成"><a href="#四-基础表及代码生成" class="headerlink" title="四.基础表及代码生成"></a>四.基础表及代码生成</h3><ol>
-<li><p>数据库创建表t_pay</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs sql"><br><span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">TABLE</span> `t_pay`<br>(<br>    `id`          <span class="hljs-type">INT</span>(<span class="hljs-number">10</span>) UNSIGNED    <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">NULL</span> AUTO_INCREMENT,<br>    `pay_no`      <span class="hljs-type">VARCHAR</span>(<span class="hljs-number">50</span>)         <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">NULL</span> COMMENT <span class="hljs-string">&#x27;支付流水号&#x27;</span>,<br>    `order_no`    <span class="hljs-type">VARCHAR</span>(<span class="hljs-number">50</span>)         <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">NULL</span> COMMENT <span class="hljs-string">&#x27;订单流水号&#x27;</span>,<br>    `user_id`     <span class="hljs-type">INT</span>(<span class="hljs-number">10</span>)                      <span class="hljs-keyword">DEFAULT</span> <span class="hljs-string">&#x27;1&#x27;</span> COMMENT <span class="hljs-string">&#x27;用户账号ID&#x27;</span>,<br>    `amount`      <span class="hljs-type">DECIMAL</span>(<span class="hljs-number">8</span>, <span class="hljs-number">2</span>)       <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">NULL</span> <span class="hljs-keyword">DEFAULT</span> <span class="hljs-string">&#x27;9.9&#x27;</span> COMMENT <span class="hljs-string">&#x27;交易金额&#x27;</span>,<br>    `deleted`     TINYINT(<span class="hljs-number">4</span>) UNSIGNED <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">NULL</span> <span class="hljs-keyword">DEFAULT</span> <span class="hljs-string">&#x27;0&#x27;</span> COMMENT <span class="hljs-string">&#x27;删除标志，默认0不删除，1删除&#x27;</span>,<br>    `create_time` <span class="hljs-type">TIMESTAMP</span>           <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">NULL</span> <span class="hljs-keyword">DEFAULT</span> <span class="hljs-built_in">CURRENT_TIMESTAMP</span> COMMENT <span class="hljs-string">&#x27;创建时间&#x27;</span>,<br>    `update_time` <span class="hljs-type">TIMESTAMP</span>           <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">NULL</span> <span class="hljs-keyword">DEFAULT</span> <span class="hljs-built_in">CURRENT_TIMESTAMP</span> <span class="hljs-keyword">ON</span> <span class="hljs-keyword">UPDATE</span> <span class="hljs-built_in">CURRENT_TIMESTAMP</span> COMMENT <span class="hljs-string">&#x27;更新时间&#x27;</span>,<br>    <span class="hljs-keyword">PRIMARY</span> KEY (`id`)<br><br>) ENGINE <span class="hljs-operator">=</span> INNODB<br>  AUTO_INCREMENT <span class="hljs-operator">=</span> <span class="hljs-number">1</span><br>  <span class="hljs-keyword">DEFAULT</span> CHARSET <span class="hljs-operator">=</span> utf8mb4 COMMENT <span class="hljs-operator">=</span><span class="hljs-string">&#x27;支付交易表&#x27;</span>;<br></code></pre></td></tr></table></figure>
-
-
+                <h2 id="OpenFeign负载均衡与服务调用"><a href="#OpenFeign负载均衡与服务调用" class="headerlink" title="OpenFeign负载均衡与服务调用"></a>OpenFeign负载均衡与服务调用</h2><h4 id="一-基本信息"><a href="#一-基本信息" class="headerlink" title="一.基本信息"></a>一.基本信息</h4><ol>
+<li><a target="_blank" rel="noopener" href="https://docs.spring.io/spring-cloud-openfeign/docs/current/reference/html/#spring-cloud-feign">openFeign官网</a></li>
+<li>openFeign是一个声明式的web服务的客户端，在接口上加注解@FeignClient，<mark>支持包含LoadBalancer组件</mark></li>
+<li>OpenFeign能干什么<blockquote>
+<p>前面在使用<strong>SpringCloud LoadBalancer</strong>+RestTemplate时，利用RestTemplate对http请求的封装处理形成了一套模版化的调用方法。<strong>但是在实际开发中</strong></p>
+<p>由于对服务依赖的调用可能不止一处，往往一个接口会被多处调用，所以通常都会针对每个微服务自行封装一些客户端类来包装这些依赖服务的调用。所以，OpenFeign在此基础上做了进一步封装，由他来帮助我们定义和实现依赖服务接口的定义。在OpenFeign的实现下，我们只需创建一个接口并使用注解的方式来配置它(在一个微服务接口上面标注一个***@FeignClient***注解即可)，即可完成对服务提供方的接口绑定，统一对外暴露可以被调用的接口方法，大大简化和降低了调用客户端的开发量，也即由服务提供者给出调用接口清单，消费者直接通过OpenFeign调用即可。</p>
+<p>OpenFeign同时还集成SpringCloud LoadBalancer</p>
+<p>可以在使用OpenFeign时提供Http客户端的负载均衡，也可以集成阿里巴巴Sentinel来提供熔断、降级等功能。而与SpringCloud LoadBalancer不同的是，通过OpenFeign只需要定义服务绑定接口且以声明式的方法，优雅而简单的实现了服务调用。</p>
+</blockquote>
 </li>
-<li><p>新建generator模块自动生成代码</p>
+<li>总结就是将写在消费者层面的RestTemplate，被集中的写在了提供者层面，消费者访问时，先访问openFeign提供的接口</li>
+<li>架构<ol>
+<li><img src="/./../assets/image-20240303221623539.png" srcset="/img/loading.gif" lazyload alt="image-20240303221623539"></li>
+</ol>
 </li>
 </ol>
-<ul>
-<li>效果</li>
-</ul>
-<p><img src="/./../assets/image-20240229002608785.png" srcset="/img/loading.gif" lazyload alt="image-20240229002608785"></p>
-
+<h4 id="二-调用实现"><a href="#二-调用实现" class="headerlink" title="二.调用实现"></a>二.调用实现</h4><h5 id="1-消费端"><a href="#1-消费端" class="headerlink" title="1.消费端"></a>1.消费端</h5><ol>
+<li>新建cloud-consumer-feign-order80服务，在pom中添加依赖 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs java">&lt;!--openfeign--&gt;<br>&lt;dependency&gt;<br>    &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;<br>    &lt;artifactId&gt;spring-cloud-starter-openfeign&lt;/artifactId&gt;<br>&lt;/dependency&gt;<br></code></pre></td></tr></table></figure></li>
+<li>启动累加@EnableFeignClients注解</li>
+<li>填写controller订单创建过程<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><code class="hljs java"><br><span class="hljs-meta">@RestController</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">OrderController</span> &#123;<br>    <span class="hljs-meta">@Resource</span><br>    <span class="hljs-keyword">private</span> PayFeignApi payFeignApi;<br><br>    <span class="hljs-meta">@PostMapping(&quot;/feign/pay/add&quot;)</span><br>    <span class="hljs-keyword">public</span> ResultData <span class="hljs-title function_">addOrder</span><span class="hljs-params">(<span class="hljs-meta">@RequestBody</span> PayDTO payDTO)</span><br>    &#123;<br>        <span class="hljs-comment">//新增订单省略</span><br>        System.out.println(<span class="hljs-string">&quot;第一步：模拟本地addOrder新增订单成功(省略sql操作)，第二步：再开启addPay支付微服务远程调用&quot;</span>);<br>        <span class="hljs-comment">//新增支付流水</span><br>        <span class="hljs-type">ResultData</span> <span class="hljs-variable">resultData</span> <span class="hljs-operator">=</span> payFeignApi.addPay(payDTO);<br>        <span class="hljs-keyword">return</span> resultData;<br>    &#125;<br><br>    <span class="hljs-meta">@GetMapping(&quot;/feign/pay/get/&#123;id&#125;&quot;)</span><br>    <span class="hljs-keyword">public</span> ResultData <span class="hljs-title function_">getPayInfo</span><span class="hljs-params">(<span class="hljs-meta">@PathVariable(&quot;id&quot;)</span> Integer id)</span><br>    &#123;<br>        System.out.println(<span class="hljs-string">&quot;-------支付微服务远程调用，按照id查询订单支付流水信息&quot;</span>);<br>        <span class="hljs-type">ResultData</span> <span class="hljs-variable">resultData</span> <span class="hljs-operator">=</span> payFeignApi.getPayInfo(id);<br>        <span class="hljs-keyword">return</span> resultData;<br>    &#125;<br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * openfeign天然支持负载均衡演示</span><br><span class="hljs-comment">     *</span><br><span class="hljs-comment">     * <span class="hljs-doctag">@return</span></span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-meta">@GetMapping(value = &quot;/feign/pay/mylb&quot;)</span><br>    <span class="hljs-keyword">public</span> String <span class="hljs-title function_">mylb</span><span class="hljs-params">()</span><br>    &#123;<br>        <span class="hljs-keyword">return</span> payFeignApi.mylb();<br>    &#125;<br>&#125;<br><br></code></pre></td></tr></table></figure></li>
+</ol>
+<h5 id="2-公共服务"><a href="#2-公共服务" class="headerlink" title="2.公共服务"></a>2.公共服务</h5><ol>
+<li>pom添加openFeign依赖</li>
+<li>定义服务端接口(将提供者接口信息注册到公共模块中)<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">//标注服务端的名称</span><br><span class="hljs-meta">@FeignClient(value = &quot;cloud-payment-service&quot;)</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">interface</span> <span class="hljs-title class_">PayFeignApi</span> &#123;<br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 新增一条支付相关流水记录</span><br><span class="hljs-comment">     * <span class="hljs-doctag">@param</span> payDTO</span><br><span class="hljs-comment">     * <span class="hljs-doctag">@return</span></span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-meta">@PostMapping(&quot;/pay/add&quot;)</span><br>    <span class="hljs-keyword">public</span> ResultData <span class="hljs-title function_">addPay</span><span class="hljs-params">(<span class="hljs-meta">@RequestBody</span> PayDTO payDTO)</span>;<br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 按照主键记录查询支付流水信息</span><br><span class="hljs-comment">     * <span class="hljs-doctag">@param</span> id</span><br><span class="hljs-comment">     * <span class="hljs-doctag">@return</span></span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-meta">@GetMapping(&quot;/pay/get/&#123;id&#125;&quot;)</span><br>    <span class="hljs-keyword">public</span> ResultData <span class="hljs-title function_">getPayInfo</span><span class="hljs-params">(<span class="hljs-meta">@PathVariable(&quot;id&quot;)</span> Integer id)</span>;<br>      <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * openfeign天然支持负载均衡演示</span><br><span class="hljs-comment">     * <span class="hljs-doctag">@return</span></span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-meta">@GetMapping(value = &quot;/pay/get/info&quot;)</span><br>    <span class="hljs-keyword">public</span> String <span class="hljs-title function_">mylb</span><span class="hljs-params">()</span>;<br>&#125;<br></code></pre></td></tr></table></figure></li>
+</ol>
+<h5 id="3-总结"><a href="#3-总结" class="headerlink" title="3.总结"></a>3.总结</h5><ol>
+<li><p>提供者要将api信息提供在接口中，并标记注解@FeignClient(value &#x3D; “提供者名称”),接口信息要保持一致</p>
+<p><img src="/./../assets/image-20240303231059168.png" srcset="/img/loading.gif" lazyload alt="image-20240303231059168"></p>
+</li>
+<li><p>消费端(主启动类加@EnableFeignClients)controller层使用<mark>接口</mark>调用服务端接口</p>
+</li>
+</ol>
+<p><img src="/./../assets/image-20240303231239956.png" srcset="/img/loading.gif" lazyload alt="image-20240303231239956"></p>
+<h4 id="三-超时重试"><a href="#三-超时重试" class="headerlink" title="三.超时重试"></a>三.超时重试</h4>
                 
               </div>
             
@@ -329,7 +344,9 @@
     <div class="post-meta">
       <i class="iconfont icon-tags"></i>
       
-        <a href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" class="print-no-link">#微服务</a>
+        <a href="/tags/%E6%9C%8D%E5%8A%A1%E8%B0%83%E7%94%A8/" class="print-no-link">#服务调用</a>
+      
+        <a href="/tags/%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1/" class="print-no-link">#负载均衡</a>
       
     </div>
   
@@ -341,8 +358,8 @@
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>1.1  深入Spring Cloud 与 Spring Cloud Alibaba --序言</div>
-      <div>https://llzkjfl.github.io/2024/02/28/1.1.1微服务/</div>
+      <div>3.2 服务调用与负载均衡——OpenFeign</div>
+      <div>https://llzkjfl.github.io/2024/03/03/1.3.2负载均衡与服务调用/</div>
     </div>
     <div class="license-meta">
       
@@ -354,7 +371,7 @@
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2024年2月28日</div>
+          <div>2024年3月3日</div>
         </div>
       
       
@@ -386,15 +403,15 @@
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2024/03/03/1.2.1%E6%9C%8D%E5%8A%A1%E6%B3%A8%E5%86%8C%E4%B8%AD%E5%BF%83%E2%80%94%E2%80%94Consul/" title="2.1  注册配置中心Consul">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">2.1  注册配置中心Consul</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
+                    
+                      <a href="/2024/03/03/1.3.1%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E4%B8%8E%E6%9C%8D%E5%8A%A1%E8%B0%83%E7%94%A8/" title="3.1 负载均衡LoadBalancer">
+                        <span class="hidden-mobile">3.1 负载均衡LoadBalancer</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
                     
                   </article>
                 </div>

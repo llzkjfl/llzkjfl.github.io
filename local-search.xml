@@ -4,11 +4,65 @@
   
   
   <entry>
-    <title>1.2.1 注册配置中心Consul</title>
-    <link href="/2024/03/02/%E6%9C%8D%E5%8A%A1%E6%B3%A8%E5%86%8C%E4%B8%AD%E5%BF%83%E2%80%94%E2%80%94Consul/"/>
-    <url>/2024/03/02/%E6%9C%8D%E5%8A%A1%E6%B3%A8%E5%86%8C%E4%B8%AD%E5%BF%83%E2%80%94%E2%80%94Consul/</url>
+    <title>3.2 服务调用与负载均衡——OpenFeign</title>
+    <link href="/2024/03/03/1.3.2%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E4%B8%8E%E6%9C%8D%E5%8A%A1%E8%B0%83%E7%94%A8/"/>
+    <url>/2024/03/03/1.3.2%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E4%B8%8E%E6%9C%8D%E5%8A%A1%E8%B0%83%E7%94%A8/</url>
     
-    <content type="html"><![CDATA[<h3 id="服务注册中心——Consul"><a href="#服务注册中心——Consul" class="headerlink" title="服务注册中心——Consul"></a>服务注册中心——Consul</h3><h4 id="一-常见注册中心"><a href="#一-常见注册中心" class="headerlink" title="一.常见注册中心"></a>一.常见注册中心</h4><ul><li>Eureka，Zookeeper，Consul，Nacos</li></ul><h4 id="二-Springcloud-consul"><a href="#二-Springcloud-consul" class="headerlink" title="二.Springcloud consul"></a>二.Springcloud consul</h4><h5 id="1-consul-官网"><a href="#1-consul-官网" class="headerlink" title="1.  consul 官网"></a>1.  <a href="https://www.consul.io/">consul 官网</a></h5><h5 id="2-spring整合consul"><a href="#2-spring整合consul" class="headerlink" title="2.  spring整合consul"></a>2.  <a href="https://docs.spring.io/spring-cloud-consul/docs/current/reference/html/">spring整合consul</a></h5><blockquote><p>本案例选择win系统1.18.0版本</p></blockquote><h4 id="三-引入Consul"><a href="#三-引入Consul" class="headerlink" title="三 . 引入Consul"></a>三 . 引入Consul</h4><h5 id="1-本地运行"><a href="#1-本地运行" class="headerlink" title="1. 本地运行"></a>1. 本地运行</h5><ul><li>网关下载解压，本地执行consul agent -dev    端口号为8550，成功后显示如下</li><li><img src="/./../assets/image-20240302181846713.png" alt="image-20240302181846713"></li><li><img src="/./../assets/image-20240302183240013.png" alt="image-20240302183240013"></li></ul><h4 id="三-服务注册与发现"><a href="#三-服务注册与发现" class="headerlink" title="三. 服务注册与发现"></a>三. 服务注册与发现</h4><h5 id="1-项目引用"><a href="#1-项目引用" class="headerlink" title="1. 项目引用"></a>1. 项目引用</h5><ol><li><p>需要引入注册中心的服务的pom中添加依赖</p><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-comment">&lt;!--SpringCloud consul discovery --&gt;</span><br> <span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span><br>     <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>org.springframework.cloud<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span><br>     <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>spring-cloud-starter-consul-discovery<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span><br> <span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span><br></code></pre></td></tr></table></figure></li><li><p>yml中添加配置</p><figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs yml"><span class="hljs-attr">spring:</span><br>  <span class="hljs-attr">cloud:</span><br>    <span class="hljs-attr">consul:</span><br>      <span class="hljs-attr">host:</span> <span class="hljs-string">localhost</span><br>      <span class="hljs-attr">port:</span> <span class="hljs-number">8500</span><br></code></pre></td></tr></table></figure></li><li><p>启动类添加@EnableDiscoveryClient注解</p><blockquote><p>该注解可以让注册中心发现该服务，并注册到服务中心</p></blockquote></li></ol><ul><li>如图</li><li><img src="/./../assets/image-20240302182953462.png" alt="image-20240302182953462"></li></ul><ol start="4"><li>测试服务之间调用<br><img src="/./../assets/image-20240302145227328.png" alt="image-20240302145227328"></li></ol><ul><li>结果报错</li><li><img src="/./../assets/image-20240302145241556.png" alt="image-20240302145241556"></li></ul><p><mark>原因</mark></p><blockquote><p>UnknowHostException 是因为consul默认支持负载均衡(多个实例)，而目前cloud-payment-service服务仅有一个实例</p></blockquote><p><mark>解决</mark></p><blockquote><p>在   RestTemplate配置类时加上@LoadBalanced注解，使得RestTemplate具有负载均衡的能力，可以直接通过服务名调用其他的微服务实例<br>添加后调用成功</p></blockquote><h4 id="四-服务配置与刷新"><a href="#四-服务配置与刷新" class="headerlink" title="四.服务配置与刷新"></a>四.服务配置与刷新</h4><h5 id="1-项目引用-1"><a href="#1-项目引用-1" class="headerlink" title="1. 项目引用"></a>1. 项目引用</h5><blockquote><p>背景:每一个服务都有配置信息，需要一套集中起来的配置管理组件<br>(对yml文件的高可维护)</p></blockquote><ol><li>pom中添加依赖<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs xml">   <span class="hljs-comment">&lt;!--SpringCloud consul config--&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>org.springframework.cloud<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>spring-cloud-starter-consul-config<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span><br><span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>org.springframework.cloud<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>spring-cloud-starter-bootstrap<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span><br><span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span><br></code></pre></td></tr></table></figure></li><li>使用bootstrap.yml(系统级)将需要consul管理的内容从application.yml(用户级别)迁移</li></ol><ul><li><p>bootstrap.yml(公共部分)</p><figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs yml"><span class="hljs-attr">spring:</span><br>  <span class="hljs-attr">application:</span><br>    <span class="hljs-attr">name:</span> <span class="hljs-string">cloud-payment-service</span><br>  <span class="hljs-attr">cloud:</span><br>    <span class="hljs-attr">consul:</span><br>      <span class="hljs-attr">host:</span> <span class="hljs-string">localhost</span><br>      <span class="hljs-attr">port:</span> <span class="hljs-number">8500</span><br>      <span class="hljs-attr">discovery:</span><br>        <span class="hljs-attr">service-name:</span> <span class="hljs-string">$&#123;spring.application.name&#125;</span><br>      <span class="hljs-attr">config:</span><br>        <span class="hljs-attr">profile-separator:</span> <span class="hljs-string">&#x27;-&#x27;</span> <span class="hljs-comment"># default value is &quot;,&quot;，we update &#x27;-&#x27;</span><br>        <span class="hljs-attr">format:</span> <span class="hljs-string">YAML</span><br>        <br><br>  <span class="hljs-comment"># config/cloud-payment-service/data</span><br>  <span class="hljs-comment">#       /cloud-payment-service-dev/data</span><br>  <span class="hljs-comment">#       /cloud-payment-service-prod/data</span><br>  <br></code></pre></td></tr></table></figure></li><li><p>application.yml(公共部分)</p><figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs yml"><span class="hljs-attr">spring:</span><br><span class="hljs-attr">server:</span><br>  <span class="hljs-attr">port:</span> <span class="hljs-number">8001</span><br><span class="hljs-comment"># ==========applicationName + druid-mysql8 driver===================</span><br><span class="hljs-attr">spring:</span><br>  <span class="hljs-attr">datasource:</span><br>    <span class="hljs-attr">type:</span> <span class="hljs-string">com.alibaba.druid.pool.DruidDataSource</span><br>    <span class="hljs-attr">driver-class-name:</span> <span class="hljs-string">com.mysql.cj.jdbc.Driver</span><br>    <span class="hljs-attr">url:</span> <span class="hljs-string">jdbc:mysql://localhost:3306/db2024?characterEncoding=utf8&amp;useSSL=false&amp;serverTimezone=GMT%2B8&amp;rewriteBatchedStatements=true&amp;allowPublicKeyRetrieval=true</span><br>    <span class="hljs-attr">username:</span> <span class="hljs-string">root</span><br>    <span class="hljs-attr">password:</span> <span class="hljs-number">123456</span><br>  <span class="hljs-attr">profiles:</span><br>    <span class="hljs-attr">active:</span> <span class="hljs-string">dev</span>   <span class="hljs-comment">#多环境配置</span><br><br><span class="hljs-comment"># ========================mybatis===================</span><br><span class="hljs-attr">mybatis:</span><br>  <span class="hljs-attr">mapper-locations:</span> <span class="hljs-string">classpath:mapper/*.xml</span><br>  <span class="hljs-attr">type-aliases-package:</span> <span class="hljs-string">com.atguigu.cloud.entities</span><br>  <span class="hljs-attr">configuration:</span><br>    <span class="hljs-attr">map-underscore-to-camel-case:</span> <span class="hljs-literal">true</span><br></code></pre></td></tr></table></figure></li></ul><h5 id="2-服务key-value设置"><a href="#2-服务key-value设置" class="headerlink" title="2. 服务key&#x2F;value设置"></a>2. 服务key&#x2F;value设置</h5><p><mark>按照约定格式配置</mark>在application中控制环境</p><figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs yml"><span class="hljs-comment"># config/cloud-payment-service/data</span><br><span class="hljs-comment">#       /cloud-payment-service-dev/data</span><br><span class="hljs-comment">#       /cloud-payment-service-prod/data</span><br></code></pre></td></tr></table></figure><h4 id="五-动态刷新"><a href="#五-动态刷新" class="headerlink" title="五.动态刷新"></a>五.动态刷新</h4><blockquote><p>本地与组件服务器信息同步(及时响应动态刷新)<br>启动类添加@RefreshScope consul默认刷新时间是55秒可以通过watch:wait-time：1控制时间</p></blockquote><h4 id="六-引申问题"><a href="#六-引申问题" class="headerlink" title="六 .引申问题"></a>六 .引申问题</h4><ol><li>注册中心的对比<blockquote><p>cap理论问题  ap cp</p></blockquote></li></ol><ul><li>zookeeper nacos consul eureka的区别</li><li>eureka  ap保证了高可用(不支持配置中心)</li><li>consul  cp保证了强一致</li></ul><ol start="2"><li>当consul重启时，所有的配置都会丢失，因此要考虑<mark>配置持久化</mark></li><li>在使用@Value(“${}”)与启动类添加@RefreshScope时，探究@Value读取和@RefreshScope刷新时机</li></ol><h4 id="完结"><a href="#完结" class="headerlink" title="完结"></a>完结</h4>]]></content>
+    <content type="html"><![CDATA[<h2 id="OpenFeign负载均衡与服务调用"><a href="#OpenFeign负载均衡与服务调用" class="headerlink" title="OpenFeign负载均衡与服务调用"></a>OpenFeign负载均衡与服务调用</h2><h4 id="一-基本信息"><a href="#一-基本信息" class="headerlink" title="一.基本信息"></a>一.基本信息</h4><ol><li><a href="https://docs.spring.io/spring-cloud-openfeign/docs/current/reference/html/#spring-cloud-feign">openFeign官网</a></li><li>openFeign是一个声明式的web服务的客户端，在接口上加注解@FeignClient，<mark>支持包含LoadBalancer组件</mark></li><li>OpenFeign能干什么<blockquote><p>前面在使用<strong>SpringCloud LoadBalancer</strong>+RestTemplate时，利用RestTemplate对http请求的封装处理形成了一套模版化的调用方法。<strong>但是在实际开发中</strong></p><p>由于对服务依赖的调用可能不止一处，往往一个接口会被多处调用，所以通常都会针对每个微服务自行封装一些客户端类来包装这些依赖服务的调用。所以，OpenFeign在此基础上做了进一步封装，由他来帮助我们定义和实现依赖服务接口的定义。在OpenFeign的实现下，我们只需创建一个接口并使用注解的方式来配置它(在一个微服务接口上面标注一个***@FeignClient***注解即可)，即可完成对服务提供方的接口绑定，统一对外暴露可以被调用的接口方法，大大简化和降低了调用客户端的开发量，也即由服务提供者给出调用接口清单，消费者直接通过OpenFeign调用即可。</p><p>OpenFeign同时还集成SpringCloud LoadBalancer</p><p>可以在使用OpenFeign时提供Http客户端的负载均衡，也可以集成阿里巴巴Sentinel来提供熔断、降级等功能。而与SpringCloud LoadBalancer不同的是，通过OpenFeign只需要定义服务绑定接口且以声明式的方法，优雅而简单的实现了服务调用。</p></blockquote></li><li>总结就是将写在消费者层面的RestTemplate，被集中的写在了提供者层面，消费者访问时，先访问openFeign提供的接口</li><li>架构<ol><li><img src="/./../assets/image-20240303221623539.png" alt="image-20240303221623539"></li></ol></li></ol><h4 id="二-调用实现"><a href="#二-调用实现" class="headerlink" title="二.调用实现"></a>二.调用实现</h4><h5 id="1-消费端"><a href="#1-消费端" class="headerlink" title="1.消费端"></a>1.消费端</h5><ol><li>新建cloud-consumer-feign-order80服务，在pom中添加依赖 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs java">&lt;!--openfeign--&gt;<br>&lt;dependency&gt;<br>    &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;<br>    &lt;artifactId&gt;spring-cloud-starter-openfeign&lt;/artifactId&gt;<br>&lt;/dependency&gt;<br></code></pre></td></tr></table></figure></li><li>启动累加@EnableFeignClients注解</li><li>填写controller订单创建过程<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><code class="hljs java"><br><span class="hljs-meta">@RestController</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">OrderController</span> &#123;<br>    <span class="hljs-meta">@Resource</span><br>    <span class="hljs-keyword">private</span> PayFeignApi payFeignApi;<br><br>    <span class="hljs-meta">@PostMapping(&quot;/feign/pay/add&quot;)</span><br>    <span class="hljs-keyword">public</span> ResultData <span class="hljs-title function_">addOrder</span><span class="hljs-params">(<span class="hljs-meta">@RequestBody</span> PayDTO payDTO)</span><br>    &#123;<br>        <span class="hljs-comment">//新增订单省略</span><br>        System.out.println(<span class="hljs-string">&quot;第一步：模拟本地addOrder新增订单成功(省略sql操作)，第二步：再开启addPay支付微服务远程调用&quot;</span>);<br>        <span class="hljs-comment">//新增支付流水</span><br>        <span class="hljs-type">ResultData</span> <span class="hljs-variable">resultData</span> <span class="hljs-operator">=</span> payFeignApi.addPay(payDTO);<br>        <span class="hljs-keyword">return</span> resultData;<br>    &#125;<br><br>    <span class="hljs-meta">@GetMapping(&quot;/feign/pay/get/&#123;id&#125;&quot;)</span><br>    <span class="hljs-keyword">public</span> ResultData <span class="hljs-title function_">getPayInfo</span><span class="hljs-params">(<span class="hljs-meta">@PathVariable(&quot;id&quot;)</span> Integer id)</span><br>    &#123;<br>        System.out.println(<span class="hljs-string">&quot;-------支付微服务远程调用，按照id查询订单支付流水信息&quot;</span>);<br>        <span class="hljs-type">ResultData</span> <span class="hljs-variable">resultData</span> <span class="hljs-operator">=</span> payFeignApi.getPayInfo(id);<br>        <span class="hljs-keyword">return</span> resultData;<br>    &#125;<br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * openfeign天然支持负载均衡演示</span><br><span class="hljs-comment">     *</span><br><span class="hljs-comment">     * <span class="hljs-doctag">@return</span></span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-meta">@GetMapping(value = &quot;/feign/pay/mylb&quot;)</span><br>    <span class="hljs-keyword">public</span> String <span class="hljs-title function_">mylb</span><span class="hljs-params">()</span><br>    &#123;<br>        <span class="hljs-keyword">return</span> payFeignApi.mylb();<br>    &#125;<br>&#125;<br><br></code></pre></td></tr></table></figure></li></ol><h5 id="2-公共服务"><a href="#2-公共服务" class="headerlink" title="2.公共服务"></a>2.公共服务</h5><ol><li>pom添加openFeign依赖</li><li>定义服务端接口(将提供者接口信息注册到公共模块中)<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">//标注服务端的名称</span><br><span class="hljs-meta">@FeignClient(value = &quot;cloud-payment-service&quot;)</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">interface</span> <span class="hljs-title class_">PayFeignApi</span> &#123;<br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 新增一条支付相关流水记录</span><br><span class="hljs-comment">     * <span class="hljs-doctag">@param</span> payDTO</span><br><span class="hljs-comment">     * <span class="hljs-doctag">@return</span></span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-meta">@PostMapping(&quot;/pay/add&quot;)</span><br>    <span class="hljs-keyword">public</span> ResultData <span class="hljs-title function_">addPay</span><span class="hljs-params">(<span class="hljs-meta">@RequestBody</span> PayDTO payDTO)</span>;<br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 按照主键记录查询支付流水信息</span><br><span class="hljs-comment">     * <span class="hljs-doctag">@param</span> id</span><br><span class="hljs-comment">     * <span class="hljs-doctag">@return</span></span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-meta">@GetMapping(&quot;/pay/get/&#123;id&#125;&quot;)</span><br>    <span class="hljs-keyword">public</span> ResultData <span class="hljs-title function_">getPayInfo</span><span class="hljs-params">(<span class="hljs-meta">@PathVariable(&quot;id&quot;)</span> Integer id)</span>;<br>      <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * openfeign天然支持负载均衡演示</span><br><span class="hljs-comment">     * <span class="hljs-doctag">@return</span></span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-meta">@GetMapping(value = &quot;/pay/get/info&quot;)</span><br>    <span class="hljs-keyword">public</span> String <span class="hljs-title function_">mylb</span><span class="hljs-params">()</span>;<br>&#125;<br></code></pre></td></tr></table></figure></li></ol><h5 id="3-总结"><a href="#3-总结" class="headerlink" title="3.总结"></a>3.总结</h5><ol><li><p>提供者要将api信息提供在接口中，并标记注解@FeignClient(value &#x3D; “提供者名称”),接口信息要保持一致</p><p><img src="/./../assets/image-20240303231059168.png" alt="image-20240303231059168"></p></li><li><p>消费端(主启动类加@EnableFeignClients)controller层使用<mark>接口</mark>调用服务端接口</p></li></ol><p><img src="/./../assets/image-20240303231239956.png" alt="image-20240303231239956"></p><h4 id="三-超时重试"><a href="#三-超时重试" class="headerlink" title="三.超时重试"></a>三.超时重试</h4>]]></content>
+    
+    
+    <categories>
+      
+      <category>Spring Cloud &amp;&amp; Spring Cloud Alibaba</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>服务调用</tag>
+      
+      <tag>负载均衡</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>3.1 负载均衡LoadBalancer</title>
+    <link href="/2024/03/03/1.3.1%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E4%B8%8E%E6%9C%8D%E5%8A%A1%E8%B0%83%E7%94%A8/"/>
+    <url>/2024/03/03/1.3.1%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E4%B8%8E%E6%9C%8D%E5%8A%A1%E8%B0%83%E7%94%A8/</url>
+    
+    <content type="html"><![CDATA[<h2 id="LoadBalancer负载均衡与服务调用"><a href="#LoadBalancer负载均衡与服务调用" class="headerlink" title="LoadBalancer负载均衡与服务调用"></a>LoadBalancer负载均衡与服务调用</h2><blockquote><p>背景:Ribbon不在维护了，LoadBalancer是基于客户端的负载均衡的组件将用户的请求尽量平坦到各个服务器上，以达到平坦压力的作用</p></blockquote><ul><li><mark>服务器端的负载和客户端的负载</mark><ul><li>以最经典的nginx为例，服务器负载，会接受所有的请求，根据 <u>负载均衡算法</u>将请求平坦到各个服务</li><li>客户端的负载是指，消费方会先使用负载均衡器从注册中心拉取提供方的实例，根据<u>负载均衡策略</u>自主的选择服务器</li></ul></li></ul><h4 id="一-基本信息"><a href="#一-基本信息" class="headerlink" title="一.基本信息"></a>一.基本信息</h4><ol><li><p><a href="https://docs.spring.io/spring-cloud-commons/reference/spring-cloud-commons/loadbalancer.html">LoadBalancer官网</a></p></li><li><p>配置使用</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-meta">@Configuration</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">RestTemplateConfig</span> &#123;<br>    <span class="hljs-meta">@Bean</span><br>    <span class="hljs-meta">@LoadBalanced</span><br>    <span class="hljs-keyword">public</span> RestTemplate <span class="hljs-title function_">restTemplate</span><span class="hljs-params">()</span><br>    &#123;<br>        <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">RestTemplate</span>();<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure></li><li><p>新增多个服务实例 8001&#x2F;8002 分别注册到consul上</p></li><li><p>服务消费端注入loadBalancer依赖</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs pom">&lt;dependency&gt;<br>   &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;<br>   &lt;artifactId&gt;spring-cloud-starter-loadbalancer&lt;/artifactId&gt;<br>&lt;/dependency&gt;<br></code></pre></td></tr></table></figure></li><li><p>调用消费者接口，发现提供者被一次调用</p></li></ol><h4 id="二-负载均衡原理"><a href="#二-负载均衡原理" class="headerlink" title="二.负载均衡原理"></a>二.负载均衡原理</h4><h5 id="客户端负载原理"><a href="#客户端负载原理" class="headerlink" title="客户端负载原理"></a>客户端负载原理</h5><ul><li>当消费者消费(多实例)提供者时，使用DiscoveryClient 对象获取注册中心对应服务的实例列表，通过负载均衡算法获取合适的实例<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">serviceUrl</span><span class="hljs-params">()</span> &#123;<br>    <span class="hljs-comment">//获取所有的服务</span><br>    List&lt;String&gt; services = discoveryClient.getServices();<br>    <span class="hljs-keyword">for</span> (String service : services) &#123;<br>        System.out.println(service);<br>    &#125;<br>    System.out.println(<span class="hljs-string">&quot;========================================&quot;</span>);<br>    <span class="hljs-comment">//获取指定服务的实例</span><br>    List&lt;ServiceInstance&gt; list = discoveryClient.getInstances(<span class="hljs-string">&quot;cloud-payment-service&quot;</span>);<br>    <span class="hljs-keyword">if</span> (list != <span class="hljs-literal">null</span> &amp;&amp; list.size() &gt; <span class="hljs-number">0</span>) &#123;<br>        <span class="hljs-keyword">for</span> (ServiceInstance serviceInstance : list) &#123;<br>            System.out.println(serviceInstance.getServiceId()<br>                    + <span class="hljs-string">&quot; &quot;</span> + serviceInstance.getHost()<br>                    + <span class="hljs-string">&quot; &quot;</span> +serviceInstance.getPort()<br>                    + <span class="hljs-string">&quot; &quot;</span> +serviceInstance.getUri());<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure></li><li>结果为</li><li><img src="/./../assets/image-20240303213423250.png" alt="image-20240303213423250"></li></ul><h5 id="负载均衡算法"><a href="#负载均衡算法" class="headerlink" title="负载均衡算法"></a>负载均衡算法</h5><ul><li><p>原理：继承ReactiveLoadBalancer接口</p></li><li><p><img src="/./../assets/image-20240303214214332.png" alt="image-20240303214214332"></p></li><li><p>默认的算法为轮询，将接口请求此处对服务实例个数取模，得到对应的实例序号</p></li><li><p>其他轮询算法</p><ul><li><p>随机</p></li><li><pre><code class="hljs">public class CustomLoadBalancerConfiguration &#123;    @Bean    ReactorLoadBalancer&lt;ServiceInstance&gt; randomLoadBalancer(Environment environment,            LoadBalancerClientFactory loadBalancerClientFactory) &#123;        String name = environment.getProperty(LoadBalancerClientFactory.PROPERTY_NAME);        return new RandomLoadBalancer(loadBalancerClientFactory                .getLazyProvider(name, ServiceInstanceListSupplier.class),                name);    &#125;&#125;</code></pre></li></ul></li></ul><h5 id="算法切换"><a href="#算法切换" class="headerlink" title="算法切换"></a>算法切换</h5><ul><li>切换随机轮询算法      改变RestTemplateConfig配置类</li></ul><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-meta">@Configuration</span><br><span class="hljs-meta">@LoadBalancerClient(</span><br><span class="hljs-meta">        //下面的value值大小写一定要和consul里面的名字一样，必须一样</span><br><span class="hljs-meta">        value = &quot;cloud-payment-service&quot;,configuration = RestTemplateConfig.class)</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">RestTemplateConfig</span><br>&#123;<br>    <span class="hljs-meta">@Bean</span><br>    <span class="hljs-meta">@LoadBalanced</span> <span class="hljs-comment">//使用@LoadBalanced注解赋予RestTemplate负载均衡的能力</span><br>    <span class="hljs-keyword">public</span> RestTemplate <span class="hljs-title function_">restTemplate</span><span class="hljs-params">()</span>&#123;<br>        <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">RestTemplate</span>();<br>    &#125;<br><br>    <span class="hljs-comment">//官方源码</span><br>    <span class="hljs-meta">@Bean</span><br>    ReactorLoadBalancer&lt;ServiceInstance&gt; <span class="hljs-title function_">randomLoadBalancer</span><span class="hljs-params">(Environment environment,</span><br><span class="hljs-params">                                                            LoadBalancerClientFactory loadBalancerClientFactory)</span> &#123;<br>        <span class="hljs-type">String</span> <span class="hljs-variable">name</span> <span class="hljs-operator">=</span> environment.getProperty(LoadBalancerClientFactory.PROPERTY_NAME);<br><br>        <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">RandomLoadBalancer</span>(loadBalancerClientFactory.getLazyProvider(name, ServiceInstanceListSupplier.class), name);<br>    &#125;<br>&#125;<br><br></code></pre></td></tr></table></figure><h2 id="完"><a href="#完" class="headerlink" title="完"></a>完</h2>]]></content>
+    
+    
+    <categories>
+      
+      <category>Spring Cloud &amp;&amp; Spring Cloud Alibaba</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>服务调用</tag>
+      
+      <tag>负载均衡</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>2.1  注册配置中心Consul</title>
+    <link href="/2024/03/03/1.2.1%E6%9C%8D%E5%8A%A1%E6%B3%A8%E5%86%8C%E4%B8%AD%E5%BF%83%E2%80%94%E2%80%94Consul/"/>
+    <url>/2024/03/03/1.2.1%E6%9C%8D%E5%8A%A1%E6%B3%A8%E5%86%8C%E4%B8%AD%E5%BF%83%E2%80%94%E2%80%94Consul/</url>
+    
+    <content type="html"><![CDATA[<h3 id="服务注册中心——Consul"><a href="#服务注册中心——Consul" class="headerlink" title="服务注册中心——Consul"></a>服务注册中心——Consul</h3><h4 id="一-常见注册中心"><a href="#一-常见注册中心" class="headerlink" title="一.常见注册中心"></a>一.常见注册中心</h4><ul><li>Eureka，Zookeeper，Consul，Nacos</li></ul><h4 id="二-Springcloud-consul"><a href="#二-Springcloud-consul" class="headerlink" title="二.Springcloud consul"></a>二.Springcloud consul</h4><h5 id="1-consul-官网"><a href="#1-consul-官网" class="headerlink" title="1.  consul 官网"></a>1.  <a href="https://www.consul.io/">consul 官网</a></h5><h5 id="2-spring整合consul"><a href="#2-spring整合consul" class="headerlink" title="2.  spring整合consul"></a>2.  <a href="https://docs.spring.io/spring-cloud-consul/docs/current/reference/html/">spring整合consul</a></h5><blockquote><p>本案例选择win系统1.18.0版本</p></blockquote><h4 id="三-引入Consul"><a href="#三-引入Consul" class="headerlink" title="三 . 引入Consul"></a>三 . 引入Consul</h4><h5 id="1-本地运行"><a href="#1-本地运行" class="headerlink" title="1. 本地运行"></a>1. 本地运行</h5><ul><li>网关下载解压，本地执行consul agent -dev    端口号为8550，成功后显示如下</li><li><img src="/./../assets/image-20240302181846713.png" alt="image-20240302181846713"></li><li><img src="/./../assets/image-20240302183240013.png" alt="image-20240302183240013"></li></ul><h4 id="三-服务注册与发现"><a href="#三-服务注册与发现" class="headerlink" title="三. 服务注册与发现"></a>三. 服务注册与发现</h4><h5 id="1-项目引用"><a href="#1-项目引用" class="headerlink" title="1. 项目引用"></a>1. 项目引用</h5><ol><li><p>需要引入注册中心的服务的pom中添加依赖</p><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-comment">&lt;!--SpringCloud consul discovery --&gt;</span><br> <span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span><br>     <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>org.springframework.cloud<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span><br>     <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>spring-cloud-starter-consul-discovery<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span><br> <span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span><br></code></pre></td></tr></table></figure></li><li><p>yml中添加配置</p><figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs yml"><span class="hljs-attr">spring:</span><br>  <span class="hljs-attr">cloud:</span><br>    <span class="hljs-attr">consul:</span><br>      <span class="hljs-attr">host:</span> <span class="hljs-string">localhost</span><br>      <span class="hljs-attr">port:</span> <span class="hljs-number">8500</span><br></code></pre></td></tr></table></figure></li><li><p>启动类添加@EnableDiscoveryClient注解</p><blockquote><p>该注解可以让注册中心发现该服务，并注册到服务中心</p></blockquote></li></ol><ul><li>如图</li><li><img src="/./../assets/image-20240302182953462.png" alt="image-20240302182953462"></li></ul><ol start="4"><li>测试服务之间调用<br><img src="/./../assets/image-20240302145227328.png" alt="image-20240302145227328"></li></ol><ul><li>结果报错</li><li><img src="/./../assets/image-20240302145241556.png" alt="image-20240302145241556"></li></ul><p><mark>原因</mark></p><blockquote><p>UnknowHostException 是因为consul默认支持负载均衡(多个实例)，而目前cloud-payment-service服务仅有一个实例</p></blockquote><p><mark>解决</mark></p><blockquote><p>在   RestTemplate配置类时加上@LoadBalanced注解，使得RestTemplate具有负载均衡的能力，可以直接通过服务名调用其他的微服务实例<br>添加后调用成功</p></blockquote><h4 id="四-服务配置与刷新"><a href="#四-服务配置与刷新" class="headerlink" title="四.服务配置与刷新"></a>四.服务配置与刷新</h4><h5 id="1-项目引用-1"><a href="#1-项目引用-1" class="headerlink" title="1. 项目引用"></a>1. 项目引用</h5><blockquote><p>背景:每一个服务都有配置信息，需要一套集中起来的配置管理组件<br>(对yml文件的高可维护)</p></blockquote><ol><li>pom中添加依赖<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs xml">   <span class="hljs-comment">&lt;!--SpringCloud consul config--&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>org.springframework.cloud<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>spring-cloud-starter-consul-config<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span><br><span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>org.springframework.cloud<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>spring-cloud-starter-bootstrap<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span><br><span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span><br></code></pre></td></tr></table></figure></li><li>使用bootstrap.yml(系统级)将需要consul管理的内容从application.yml(用户级别)迁移</li></ol><ul><li><p>bootstrap.yml(公共部分)</p><figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs yml"><span class="hljs-attr">spring:</span><br>  <span class="hljs-attr">application:</span><br>    <span class="hljs-attr">name:</span> <span class="hljs-string">cloud-payment-service</span><br>  <span class="hljs-attr">cloud:</span><br>    <span class="hljs-attr">consul:</span><br>      <span class="hljs-attr">host:</span> <span class="hljs-string">localhost</span><br>      <span class="hljs-attr">port:</span> <span class="hljs-number">8500</span><br>      <span class="hljs-attr">discovery:</span><br>        <span class="hljs-attr">service-name:</span> <span class="hljs-string">$&#123;spring.application.name&#125;</span><br>      <span class="hljs-attr">config:</span><br>        <span class="hljs-attr">profile-separator:</span> <span class="hljs-string">&#x27;-&#x27;</span> <span class="hljs-comment"># default value is &quot;,&quot;，we update &#x27;-&#x27;</span><br>        <span class="hljs-attr">format:</span> <span class="hljs-string">YAML</span><br>        <br><br>  <span class="hljs-comment"># config/cloud-payment-service/data</span><br>  <span class="hljs-comment">#       /cloud-payment-service-dev/data</span><br>  <span class="hljs-comment">#       /cloud-payment-service-prod/data</span><br>  <br></code></pre></td></tr></table></figure></li><li><p>application.yml(公共部分)</p><figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs yml"><span class="hljs-attr">spring:</span><br><span class="hljs-attr">server:</span><br>  <span class="hljs-attr">port:</span> <span class="hljs-number">8001</span><br><span class="hljs-comment"># ==========applicationName + druid-mysql8 driver===================</span><br><span class="hljs-attr">spring:</span><br>  <span class="hljs-attr">datasource:</span><br>    <span class="hljs-attr">type:</span> <span class="hljs-string">com.alibaba.druid.pool.DruidDataSource</span><br>    <span class="hljs-attr">driver-class-name:</span> <span class="hljs-string">com.mysql.cj.jdbc.Driver</span><br>    <span class="hljs-attr">url:</span> <span class="hljs-string">jdbc:mysql://localhost:3306/db2024?characterEncoding=utf8&amp;useSSL=false&amp;serverTimezone=GMT%2B8&amp;rewriteBatchedStatements=true&amp;allowPublicKeyRetrieval=true</span><br>    <span class="hljs-attr">username:</span> <span class="hljs-string">root</span><br>    <span class="hljs-attr">password:</span> <span class="hljs-number">123456</span><br>  <span class="hljs-attr">profiles:</span><br>    <span class="hljs-attr">active:</span> <span class="hljs-string">dev</span>   <span class="hljs-comment">#多环境配置</span><br><br><span class="hljs-comment"># ========================mybatis===================</span><br><span class="hljs-attr">mybatis:</span><br>  <span class="hljs-attr">mapper-locations:</span> <span class="hljs-string">classpath:mapper/*.xml</span><br>  <span class="hljs-attr">type-aliases-package:</span> <span class="hljs-string">com.atguigu.cloud.entities</span><br>  <span class="hljs-attr">configuration:</span><br>    <span class="hljs-attr">map-underscore-to-camel-case:</span> <span class="hljs-literal">true</span><br></code></pre></td></tr></table></figure></li></ul><h5 id="2-服务key-value设置"><a href="#2-服务key-value设置" class="headerlink" title="2. 服务key&#x2F;value设置"></a>2. 服务key&#x2F;value设置</h5><p><mark>按照约定格式配置</mark>在application中控制环境</p><figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs yml"><span class="hljs-comment"># config/cloud-payment-service/data</span><br><span class="hljs-comment">#       /cloud-payment-service-dev/data</span><br><span class="hljs-comment">#       /cloud-payment-service-prod/data</span><br></code></pre></td></tr></table></figure><h4 id="五-动态刷新"><a href="#五-动态刷新" class="headerlink" title="五.动态刷新"></a>五.动态刷新</h4><blockquote><p>本地与组件服务器信息同步(及时响应动态刷新)<br>启动类添加@RefreshScope consul默认刷新时间是55秒可以通过watch:wait-time：1控制时间</p></blockquote><h4 id="六-引申问题"><a href="#六-引申问题" class="headerlink" title="六 .引申问题"></a>六 .引申问题</h4><ol><li>注册中心的对比<blockquote><p>cap理论问题  ap cp</p></blockquote></li></ol><ul><li>zookeeper nacos consul eureka的区别</li><li>eureka  ap保证了高可用(不支持配置中心)</li><li>consul  cp保证了强一致</li></ul><ol start="2"><li>当consul重启时，所有的配置都会丢失，因此要考虑<mark>配置持久化</mark></li><li>在使用@Value(“${}”)与启动类添加@RefreshScope时，探究@Value读取和@RefreshScope刷新时机</li></ol><h4 id="七-解决"><a href="#七-解决" class="headerlink" title="七.解决"></a>七.解决</h4><ol><li>持久化问题</li></ol><ul><li>通过使用脚本语言，将consul启动时读取本地配置文件进行配置加载</li><li><img src="/./../assets/image-20240303191207594.png" alt="image-20240303191207594"></li></ul><h4 id="完结"><a href="#完结" class="headerlink" title="完结"></a>完结</h4>]]></content>
     
     
     <categories>
@@ -31,7 +85,7 @@
   
   
   <entry>
-    <title>1.1.1 深入Spring Cloud &amp;&amp; Spring Cloud Alibaba --序言</title>
+    <title>1.1  深入Spring Cloud 与 Spring Cloud Alibaba --序言</title>
     <link href="/2024/02/28/1.1.1%E5%BE%AE%E6%9C%8D%E5%8A%A1/"/>
     <url>/2024/02/28/1.1.1%E5%BE%AE%E6%9C%8D%E5%8A%A1/</url>
     
@@ -48,708 +102,6 @@
     <tags>
       
       <tag>微服务</tag>
-      
-    </tags>
-    
-  </entry>
-  
-  
-  
-  <entry>
-    <title>简单工场模式</title>
-    <link href="/2024/02/18/%E7%AE%80%E5%8D%95%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F/"/>
-    <url>/2024/02/18/%E7%AE%80%E5%8D%95%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F/</url>
-    
-    <content type="html"><![CDATA[<p><strong>一. 学习路线</strong></p><p><strong>1. java基础</strong><br>   <a href="https://www.bilibili.com/video/BV1yW4y1Y7Ms/?spm_id_from=333.999.0.0&vd_source=7b65dac64359aba0497d90a84311deb9">最新简短</a></p><p><strong>2. web基础</strong><br>   <a href="https://www.bilibili.com/video/BV1yW4y1Y7Ms/?spm_id_from=333.999.0.0&vd_source=7b65dac64359aba0497d90a84311deb9">web</a></p><blockquote><p>html+js+vue+ajax+Element+maven+http+tomcat+Spring+mysql+mybatis+案例+登录(jwt)+过滤器+拦截器+事务+aop+springboot</p></blockquote><p><strong>3. mysql进阶</strong>(随便一个都可以 建议黑马)<br><a href="https://www.bilibili.com/video/BV1Kr4y1i7ru/?spm_id_from=333.337.search-card.all.click&vd_source=7b65dac64359aba0497d90a84311deb9">进阶一</a></p><blockquote><p>p58-p152</p></blockquote><p><a href="https://www.bilibili.com/video/BV1iq4y1u7vj/?spm_id_from=333.337.search-card.all.click&vd_source=7b65dac64359aba0497d90a84311deb9">进阶二</a></p><blockquote><p>p58-p152</p></blockquote><p><strong>4. 单体项目一</strong><br><a href="https://www.bilibili.com/video/BV1TP411v7v6/?spm_id_from=333.999.0.0&vd_source=7b65dac64359aba0497d90a84311deb9">单体项目</a></p><blockquote><p>全看</p></blockquote><p><strong>5.redis(必看)</strong><br><a href="https://www.bilibili.com/video/BV1cr4y1671t/?spm_id_from=333.337.search-card.all.click&vd_source=7b65dac64359aba0497d90a84311deb9">redis</a></p><blockquote><p> p95前全看  高级篇多级缓存必看</p></blockquote><p><strong>6. 总结一波</strong></p><p><strong>7. springcloud</strong></p><p><a href="https://www.bilibili.com/video/BV1LQ4y127n4/?spm_id_from=333.337.search-card.all.click&vd_source=7b65dac64359aba0497d90a84311deb9">微服务</a></p><blockquote><p>nacos+openfeign(dubbo)+gateway+setea+seata+Sentinel</p></blockquote><p><strong>8. 微服务项目</strong><br><a href="https://www.bilibili.com/video/BV1j8411N7Bm/?spm_id_from=333.337.search-card.all.click&vd_source=7b65dac64359aba0497d90a84311deb9">项目一</a><br><a href="https://www.bilibili.com/video/BV1Qs4y1v7x4/?spm_id_from=333.999.0.0&vd_source=7b65dac64359aba0497d90a84311deb9">项目二</a><br>[网盘韩顺平家具项目]<br><strong>9. 面试</strong></p><p><a href="https://www.bilibili.com/video/BV1yT411H7YK/?spm_id_from=333.999.0.0&vd_source=7b65dac64359aba0497d90a84311deb9">面试</a></p><p><strong>10.说明</strong></p><ul><li>此学习路线应该是不走弯路的最快的视频学习路线了</li><li>途中肯定有来不及学，听不懂的，可以查阅 尚硅谷 韩顺平(非常详细) 对应网课 进行补充</li></ul><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-meta">@Service</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">ExcelProcessServiceImpl</span> <span class="hljs-keyword">implements</span> <span class="hljs-title class_">ExcelProcessService</span> &#123;<br><br>    <span class="hljs-meta">@SneakyThrows</span><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">processExcel</span><span class="hljs-params">(MultipartFile file, HttpServletResponse response)</span>  &#123;<br>        <span class="hljs-comment">//处理账龄划分</span><br>        <span class="hljs-type">ExcelReader</span> <span class="hljs-variable">reader</span> <span class="hljs-operator">=</span> ExcelUtil.getReader(file.getInputStream());<br><br>        List&lt;Map&lt;String, Object&gt;&gt; excelDetails = reader.read(<span class="hljs-number">0</span>, <span class="hljs-number">1</span>, Integer.MAX_VALUE);<br>        <span class="hljs-comment">//每一年账龄map</span><br>        LinkedHashMap&lt;Integer, LinkedHashMap&lt;Integer, String&gt;&gt; accountsAgeMap = <span class="hljs-keyword">new</span> <span class="hljs-title class_">LinkedHashMap</span>&lt;&gt;();<br><br><br>        <span class="hljs-keyword">if</span>(CollUtil.isNotEmpty(excelDetails))&#123;<br>            <span class="hljs-comment">//一行一行处理</span><br>            <span class="hljs-keyword">for</span> (Map&lt;String, Object&gt; excelDetail : excelDetails) &#123;<br>                <span class="hljs-comment">//处理六年--从高到底</span><br>                <span class="hljs-comment">//BigDecimal subtract = debit.subtract(credit).compareTo(BigDecimal.ZERO)&gt;0?debit.subtract(credit):BigDecimal.ZERO;</span><br>                <span class="hljs-comment">//将第一年的借作为基础数据</span><br>                <span class="hljs-type">BigDecimal</span> <span class="hljs-variable">init</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">BigDecimal</span>(excelDetail.get(ExcelConstants.DEBIT+<span class="hljs-number">1</span>).toString());<br><br>                <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> <span class="hljs-variable">i</span> <span class="hljs-operator">=</span> ExcelConstants.FIRST_YEAR; i &lt;= ExcelConstants.LAST_YEAR; i++) &#123;<br>                    <span class="hljs-type">int</span> <span class="hljs-variable">j</span> <span class="hljs-operator">=</span> i - ExcelConstants.DIFF_YEAR;<br>                    <span class="hljs-comment">//基础账目</span><br>                    <span class="hljs-type">BigDecimal</span> <span class="hljs-variable">first</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">BigDecimal</span>(excelDetail.get(String.valueOf(i)).toString());<br>                    <span class="hljs-comment">//当年借贷</span><br>                    <span class="hljs-type">BigDecimal</span> <span class="hljs-variable">debit</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">BigDecimal</span>(excelDetail.get(ExcelConstants.DEBIT + j).toString());<br>                    <span class="hljs-type">BigDecimal</span> <span class="hljs-variable">credit</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">BigDecimal</span>(excelDetail.get(ExcelConstants.CREDIT + j).toString());<br>                    <br>                    <br>                    <span class="hljs-comment">//遍历上年所有账龄 高-&gt;低</span><br>                    LinkedHashMap&lt;Integer, String&gt; yearAccountMap = accountsAgeMap.get(i - <span class="hljs-number">1</span>);<br>                    <span class="hljs-keyword">if</span>(CollUtil.isNotEmpty(yearAccountMap))&#123;<br>                        List&lt;Integer&gt; collect = yearAccountMap.keySet().stream().sorted(Comparator.reverseOrder()).collect(Collectors.toList());<br>                        <span class="hljs-comment">//hasmap转移</span><br>                        LinkedHashMap&lt;Integer, String&gt; nextYearMap = <span class="hljs-keyword">new</span> <span class="hljs-title class_">LinkedHashMap</span>&lt;Integer, String&gt;();<br>                        <span class="hljs-keyword">for</span> (Integer num : collect) &#123;<br>                            nextYearMap.put(num+<span class="hljs-number">1</span>,yearAccountMap.get(num));<br>                        &#125;<br>                        <span class="hljs-comment">//加入当前年份借方</span><br>                        nextYearMap.put(<span class="hljs-number">1</span>,debit.toString());<br>                        List&lt;Integer&gt; nextYearColl = nextYearMap.keySet().stream().sorted(Comparator.reverseOrder()).collect(Collectors.toList());<br>                        <span class="hljs-comment">//从高到低</span><br>                        <span class="hljs-type">BigDecimal</span> <span class="hljs-variable">zero</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">BigDecimal</span>(credit.toString());<br><br>                        <span class="hljs-keyword">for</span> (Integer num : nextYearColl) &#123;<br>                            <span class="hljs-comment">//去年最大账目</span><br>                            <span class="hljs-type">BigDecimal</span> <span class="hljs-variable">oldAcc</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">BigDecimal</span>(nextYearMap.get(num).toString());<br>                            <span class="hljs-comment">//差值</span><br>                            <span class="hljs-type">BigDecimal</span> <span class="hljs-variable">subtract</span> <span class="hljs-operator">=</span> zero.subtract(oldAcc);<br>                            <span class="hljs-comment">//比较大小</span><br>                            <span class="hljs-type">int</span> <span class="hljs-variable">compare</span> <span class="hljs-operator">=</span> subtract.compareTo(BigDecimal.ZERO);<br>                            <span class="hljs-keyword">if</span>(compare&gt;<span class="hljs-number">0</span>)&#123;<br>                                <span class="hljs-comment">//还完了最后一年还剩余</span><br>                                zero = subtract;<br>                                nextYearMap.remove(num);<br>                            &#125;<span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (compare==<span class="hljs-number">0</span>)&#123;<br>                                <span class="hljs-comment">//刚好抵消</span><br>                                nextYearMap.remove(num);<br>                                <span class="hljs-keyword">break</span>;<br>                            &#125;<span class="hljs-keyword">else</span> &#123;<br>                                <span class="hljs-comment">//不够还</span><br>                                nextYearMap.put(num,subtract.negate().toString());<br>                                <span class="hljs-keyword">break</span>;<br>                            &#125;<br>                        &#125;<br>                        accountsAgeMap.put(i, nextYearMap);<br>                    &#125;<span class="hljs-keyword">else</span> &#123;<br>                        <span class="hljs-comment">//第一年</span><br>                        LinkedHashMap&lt;Integer, String&gt; map = <span class="hljs-keyword">new</span> <span class="hljs-title class_">LinkedHashMap</span>&lt;Integer, String&gt;();<br>                        map.put(<span class="hljs-number">1</span>,debit.subtract(credit).toString());<br>                                accountsAgeMap.put(i, map);<br>                    &#125;<br>                    LinkedHashMap&lt;Integer, String&gt; tatolMap = accountsAgeMap.get(i);<br>                    <span class="hljs-type">BigDecimal</span>  <span class="hljs-variable">tatol</span> <span class="hljs-operator">=</span> BigDecimal.ZERO;<br>                    <span class="hljs-keyword">if</span>(CollUtil.isNotEmpty(tatolMap.keySet()))&#123;<br>                        <span class="hljs-keyword">for</span> (Integer num : tatolMap.keySet()) &#123;<br>                            <span class="hljs-comment">//去年最大账目</span><br>                            <span class="hljs-type">BigDecimal</span> <span class="hljs-variable">oldAcc</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">BigDecimal</span>(tatolMap.get(num).toString());<br>                            tatol = tatol.add(oldAcc);<br>                        &#125;<br>                    &#125;<br>                    excelDetail.put(String.valueOf(i),tatol.toString());<br>                &#125;   <span class="hljs-comment">//组装map</span><br>                LinkedHashMap&lt;Integer, String&gt; last = accountsAgeMap.get(ExcelConstants.LAST_YEAR);<br>                <span class="hljs-keyword">if</span>(CollUtil.isNotEmpty(last))&#123;<br>                    Set&lt;Integer&gt; integers = last.keySet();<br>                    <span class="hljs-keyword">for</span> (Integer integer : integers) &#123;<br>                        <span class="hljs-type">String</span> <span class="hljs-variable">codeByNum</span> <span class="hljs-operator">=</span> YearEnum.getCodeByNum(integer);<br>                        excelDetail.put(codeByNum,last.get(integer));<br>                    &#125;<br>                &#125;<br><br>            &#125;<br>            <span class="hljs-type">ExcelWriter</span> <span class="hljs-variable">writer</span> <span class="hljs-operator">=</span> ExcelUtil.getWriter();<br>            writer.write(excelDetails, <span class="hljs-literal">true</span>);<br><br>            <span class="hljs-comment">//通过工具类创建writer</span><br>            response.setContentType(<span class="hljs-string">&quot;application/vnd.ms-excel;charset=utf-8&quot;</span>);<br>            response.setHeader(<span class="hljs-string">&quot;Content-disposition&quot;</span>, <span class="hljs-string">&quot;attachment; filename=&quot;</span> + URLEncoder.encode(<span class="hljs-string">&quot;账龄划分&quot;</span> + DateUtil.today() + <span class="hljs-string">&quot;.xls&quot;</span>, <span class="hljs-string">&quot;utf-8&quot;</span>));<br><br>            <span class="hljs-type">ServletOutputStream</span> <span class="hljs-variable">out</span> <span class="hljs-operator">=</span> response.getOutputStream();<br>            writer.flush(out, <span class="hljs-literal">true</span>);<br>            writer.close();<br>            IoUtil.close(out);<br><br>        &#125;<br><br>    &#125;<br><br>&#125;<br><br></code></pre></td></tr></table></figure>]]></content>
-    
-    
-    <categories>
-      
-      <category>设计模式</category>
-      
-    </categories>
-    
-    
-    <tags>
-      
-      <tag>设计模式</tag>
-      
-    </tags>
-    
-  </entry>
-  
-  
-  
-  <entry>
-    <title>Hello World</title>
-    <link href="/2024/02/17/hello-world%20-%20%E5%89%AF%E6%9C%AC%20(20)/"/>
-    <url>/2024/02/17/hello-world%20-%20%E5%89%AF%E6%9C%AC%20(20)/</url>
-    
-    <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p><h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo new <span class="hljs-string">&quot;My New Post&quot;</span><br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p><h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo server<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p><h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo generate<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p><h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo deploy<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>]]></content>
-    
-    
-    <categories>
-      
-      <category>博客</category>
-      
-    </categories>
-    
-    
-    <tags>
-      
-      <tag>node</tag>
-      
-      <tag>git</tag>
-      
-      <tag>github</tag>
-      
-      <tag>博客</tag>
-      
-    </tags>
-    
-  </entry>
-  
-  
-  
-  <entry>
-    <title>Hello World</title>
-    <link href="/2024/02/17/hello-world%20-%20%E5%89%AF%E6%9C%AC%20(19)/"/>
-    <url>/2024/02/17/hello-world%20-%20%E5%89%AF%E6%9C%AC%20(19)/</url>
-    
-    <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p><h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo new <span class="hljs-string">&quot;My New Post&quot;</span><br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p><h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo server<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p><h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo generate<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p><h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo deploy<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>]]></content>
-    
-    
-    <categories>
-      
-      <category>博客</category>
-      
-    </categories>
-    
-    
-    <tags>
-      
-      <tag>node</tag>
-      
-      <tag>git</tag>
-      
-      <tag>github</tag>
-      
-      <tag>博客</tag>
-      
-    </tags>
-    
-  </entry>
-  
-  
-  
-  <entry>
-    <title>Hello World</title>
-    <link href="/2024/02/17/hello-world%20-%20%E5%89%AF%E6%9C%AC%20(18)/"/>
-    <url>/2024/02/17/hello-world%20-%20%E5%89%AF%E6%9C%AC%20(18)/</url>
-    
-    <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p><h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo new <span class="hljs-string">&quot;My New Post&quot;</span><br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p><h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo server<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p><h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo generate<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p><h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo deploy<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>]]></content>
-    
-    
-    <categories>
-      
-      <category>博客</category>
-      
-    </categories>
-    
-    
-    <tags>
-      
-      <tag>node</tag>
-      
-      <tag>git</tag>
-      
-      <tag>github</tag>
-      
-      <tag>博客</tag>
-      
-    </tags>
-    
-  </entry>
-  
-  
-  
-  <entry>
-    <title>Hello World</title>
-    <link href="/2024/02/17/hello-world%20-%20%E5%89%AF%E6%9C%AC%20(17)/"/>
-    <url>/2024/02/17/hello-world%20-%20%E5%89%AF%E6%9C%AC%20(17)/</url>
-    
-    <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p><h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo new <span class="hljs-string">&quot;My New Post&quot;</span><br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p><h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo server<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p><h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo generate<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p><h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo deploy<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>]]></content>
-    
-    
-    <categories>
-      
-      <category>博客</category>
-      
-    </categories>
-    
-    
-    <tags>
-      
-      <tag>node</tag>
-      
-      <tag>git</tag>
-      
-      <tag>github</tag>
-      
-      <tag>博客</tag>
-      
-    </tags>
-    
-  </entry>
-  
-  
-  
-  <entry>
-    <title>Hello World</title>
-    <link href="/2024/02/17/hello-world%20-%20%E5%89%AF%E6%9C%AC%20(16)/"/>
-    <url>/2024/02/17/hello-world%20-%20%E5%89%AF%E6%9C%AC%20(16)/</url>
-    
-    <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p><h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo new <span class="hljs-string">&quot;My New Post&quot;</span><br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p><h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo server<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p><h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo generate<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p><h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo deploy<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>]]></content>
-    
-    
-    <categories>
-      
-      <category>博客</category>
-      
-    </categories>
-    
-    
-    <tags>
-      
-      <tag>node</tag>
-      
-      <tag>git</tag>
-      
-      <tag>github</tag>
-      
-      <tag>博客</tag>
-      
-    </tags>
-    
-  </entry>
-  
-  
-  
-  <entry>
-    <title>Hello World</title>
-    <link href="/2024/02/17/hello-world%20-%20%E5%89%AF%E6%9C%AC%20(15)/"/>
-    <url>/2024/02/17/hello-world%20-%20%E5%89%AF%E6%9C%AC%20(15)/</url>
-    
-    <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p><h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo new <span class="hljs-string">&quot;My New Post&quot;</span><br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p><h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo server<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p><h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo generate<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p><h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo deploy<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>]]></content>
-    
-    
-    <categories>
-      
-      <category>博客</category>
-      
-    </categories>
-    
-    
-    <tags>
-      
-      <tag>node</tag>
-      
-      <tag>git</tag>
-      
-      <tag>github</tag>
-      
-      <tag>博客</tag>
-      
-    </tags>
-    
-  </entry>
-  
-  
-  
-  <entry>
-    <title>Hello World</title>
-    <link href="/2024/02/17/hello-world%20-%20%E5%89%AF%E6%9C%AC%20(14)/"/>
-    <url>/2024/02/17/hello-world%20-%20%E5%89%AF%E6%9C%AC%20(14)/</url>
-    
-    <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p><h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo new <span class="hljs-string">&quot;My New Post&quot;</span><br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p><h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo server<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p><h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo generate<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p><h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo deploy<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>]]></content>
-    
-    
-    <categories>
-      
-      <category>博客</category>
-      
-    </categories>
-    
-    
-    <tags>
-      
-      <tag>node</tag>
-      
-      <tag>git</tag>
-      
-      <tag>github</tag>
-      
-      <tag>博客</tag>
-      
-    </tags>
-    
-  </entry>
-  
-  
-  
-  <entry>
-    <title>Hello World</title>
-    <link href="/2024/02/17/hello-world%20-%20%E5%89%AF%E6%9C%AC%20(13)/"/>
-    <url>/2024/02/17/hello-world%20-%20%E5%89%AF%E6%9C%AC%20(13)/</url>
-    
-    <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p><h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo new <span class="hljs-string">&quot;My New Post&quot;</span><br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p><h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo server<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p><h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo generate<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p><h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo deploy<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>]]></content>
-    
-    
-    <categories>
-      
-      <category>博客</category>
-      
-    </categories>
-    
-    
-    <tags>
-      
-      <tag>node</tag>
-      
-      <tag>git</tag>
-      
-      <tag>github</tag>
-      
-      <tag>博客</tag>
-      
-    </tags>
-    
-  </entry>
-  
-  
-  
-  <entry>
-    <title>Hello World</title>
-    <link href="/2024/02/17/hello-world%20-%20%E5%89%AF%E6%9C%AC%20(12)/"/>
-    <url>/2024/02/17/hello-world%20-%20%E5%89%AF%E6%9C%AC%20(12)/</url>
-    
-    <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p><h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo new <span class="hljs-string">&quot;My New Post&quot;</span><br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p><h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo server<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p><h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo generate<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p><h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo deploy<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>]]></content>
-    
-    
-    <categories>
-      
-      <category>博客</category>
-      
-    </categories>
-    
-    
-    <tags>
-      
-      <tag>node</tag>
-      
-      <tag>git</tag>
-      
-      <tag>github</tag>
-      
-      <tag>博客</tag>
-      
-    </tags>
-    
-  </entry>
-  
-  
-  
-  <entry>
-    <title>Hello World</title>
-    <link href="/2024/02/17/hello-world%20-%20%E5%89%AF%E6%9C%AC%20(11)/"/>
-    <url>/2024/02/17/hello-world%20-%20%E5%89%AF%E6%9C%AC%20(11)/</url>
-    
-    <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p><h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo new <span class="hljs-string">&quot;My New Post&quot;</span><br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p><h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo server<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p><h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo generate<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p><h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo deploy<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>]]></content>
-    
-    
-    <categories>
-      
-      <category>博客</category>
-      
-    </categories>
-    
-    
-    <tags>
-      
-      <tag>node</tag>
-      
-      <tag>git</tag>
-      
-      <tag>github</tag>
-      
-      <tag>博客</tag>
-      
-    </tags>
-    
-  </entry>
-  
-  
-  
-  <entry>
-    <title>Hello World</title>
-    <link href="/2024/02/17/hello-world%20-%20%E5%89%AF%E6%9C%AC%20(10)/"/>
-    <url>/2024/02/17/hello-world%20-%20%E5%89%AF%E6%9C%AC%20(10)/</url>
-    
-    <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p><h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo new <span class="hljs-string">&quot;My New Post&quot;</span><br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p><h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo server<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p><h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo generate<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p><h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo deploy<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>]]></content>
-    
-    
-    <categories>
-      
-      <category>博客</category>
-      
-    </categories>
-    
-    
-    <tags>
-      
-      <tag>node</tag>
-      
-      <tag>git</tag>
-      
-      <tag>github</tag>
-      
-      <tag>博客</tag>
-      
-    </tags>
-    
-  </entry>
-  
-  
-  
-  <entry>
-    <title>Hello World</title>
-    <link href="/2024/02/17/hello-world%20-%20%E5%89%AF%E6%9C%AC%20(9)/"/>
-    <url>/2024/02/17/hello-world%20-%20%E5%89%AF%E6%9C%AC%20(9)/</url>
-    
-    <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p><h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo new <span class="hljs-string">&quot;My New Post&quot;</span><br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p><h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo server<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p><h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo generate<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p><h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo deploy<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>]]></content>
-    
-    
-    <categories>
-      
-      <category>博客</category>
-      
-    </categories>
-    
-    
-    <tags>
-      
-      <tag>node</tag>
-      
-      <tag>git</tag>
-      
-      <tag>github</tag>
-      
-      <tag>博客</tag>
-      
-    </tags>
-    
-  </entry>
-  
-  
-  
-  <entry>
-    <title>Hello World</title>
-    <link href="/2024/02/17/hello-world%20-%20%E5%89%AF%E6%9C%AC%20(8)/"/>
-    <url>/2024/02/17/hello-world%20-%20%E5%89%AF%E6%9C%AC%20(8)/</url>
-    
-    <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p><h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo new <span class="hljs-string">&quot;My New Post&quot;</span><br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p><h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo server<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p><h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo generate<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p><h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo deploy<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>]]></content>
-    
-    
-    <categories>
-      
-      <category>博客</category>
-      
-    </categories>
-    
-    
-    <tags>
-      
-      <tag>node</tag>
-      
-      <tag>git</tag>
-      
-      <tag>github</tag>
-      
-      <tag>博客</tag>
-      
-    </tags>
-    
-  </entry>
-  
-  
-  
-  <entry>
-    <title>Hello World</title>
-    <link href="/2024/02/17/hello-world%20-%20%E5%89%AF%E6%9C%AC%20(7)/"/>
-    <url>/2024/02/17/hello-world%20-%20%E5%89%AF%E6%9C%AC%20(7)/</url>
-    
-    <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p><h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo new <span class="hljs-string">&quot;My New Post&quot;</span><br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p><h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo server<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p><h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo generate<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p><h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo deploy<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>]]></content>
-    
-    
-    <categories>
-      
-      <category>博客</category>
-      
-    </categories>
-    
-    
-    <tags>
-      
-      <tag>node</tag>
-      
-      <tag>git</tag>
-      
-      <tag>github</tag>
-      
-      <tag>博客</tag>
-      
-    </tags>
-    
-  </entry>
-  
-  
-  
-  <entry>
-    <title>Hello World</title>
-    <link href="/2024/02/17/hello-world%20-%20%E5%89%AF%E6%9C%AC%20(6)/"/>
-    <url>/2024/02/17/hello-world%20-%20%E5%89%AF%E6%9C%AC%20(6)/</url>
-    
-    <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p><h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo new <span class="hljs-string">&quot;My New Post&quot;</span><br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p><h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo server<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p><h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo generate<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p><h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo deploy<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>]]></content>
-    
-    
-    <categories>
-      
-      <category>博客</category>
-      
-    </categories>
-    
-    
-    <tags>
-      
-      <tag>node</tag>
-      
-      <tag>git</tag>
-      
-      <tag>github</tag>
-      
-      <tag>博客</tag>
-      
-    </tags>
-    
-  </entry>
-  
-  
-  
-  <entry>
-    <title>Hello World</title>
-    <link href="/2024/02/17/hello-world%20-%20%E5%89%AF%E6%9C%AC%20(5)/"/>
-    <url>/2024/02/17/hello-world%20-%20%E5%89%AF%E6%9C%AC%20(5)/</url>
-    
-    <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p><h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo new <span class="hljs-string">&quot;My New Post&quot;</span><br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p><h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo server<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p><h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo generate<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p><h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo deploy<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>]]></content>
-    
-    
-    <categories>
-      
-      <category>博客</category>
-      
-    </categories>
-    
-    
-    <tags>
-      
-      <tag>node</tag>
-      
-      <tag>git</tag>
-      
-      <tag>github</tag>
-      
-      <tag>博客</tag>
-      
-    </tags>
-    
-  </entry>
-  
-  
-  
-  <entry>
-    <title>Hello World</title>
-    <link href="/2024/02/17/hello-world%20-%20%E5%89%AF%E6%9C%AC%20(4)/"/>
-    <url>/2024/02/17/hello-world%20-%20%E5%89%AF%E6%9C%AC%20(4)/</url>
-    
-    <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p><h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo new <span class="hljs-string">&quot;My New Post&quot;</span><br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p><h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo server<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p><h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo generate<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p><h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo deploy<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>]]></content>
-    
-    
-    <categories>
-      
-      <category>博客</category>
-      
-    </categories>
-    
-    
-    <tags>
-      
-      <tag>node</tag>
-      
-      <tag>git</tag>
-      
-      <tag>github</tag>
-      
-      <tag>博客</tag>
-      
-    </tags>
-    
-  </entry>
-  
-  
-  
-  <entry>
-    <title>Hello World</title>
-    <link href="/2024/02/17/hello-world%20-%20%E5%89%AF%E6%9C%AC%20(3)/"/>
-    <url>/2024/02/17/hello-world%20-%20%E5%89%AF%E6%9C%AC%20(3)/</url>
-    
-    <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p><h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo new <span class="hljs-string">&quot;My New Post&quot;</span><br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p><h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo server<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p><h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo generate<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p><h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo deploy<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>]]></content>
-    
-    
-    <categories>
-      
-      <category>博客</category>
-      
-    </categories>
-    
-    
-    <tags>
-      
-      <tag>node</tag>
-      
-      <tag>git</tag>
-      
-      <tag>github</tag>
-      
-      <tag>博客</tag>
-      
-    </tags>
-    
-  </entry>
-  
-  
-  
-  <entry>
-    <title>Hello World</title>
-    <link href="/2024/02/17/hello-world%20-%20%E5%89%AF%E6%9C%AC%20(2)/"/>
-    <url>/2024/02/17/hello-world%20-%20%E5%89%AF%E6%9C%AC%20(2)/</url>
-    
-    <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p><h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo new <span class="hljs-string">&quot;My New Post&quot;</span><br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p><h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo server<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p><h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo generate<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p><h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo deploy<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>]]></content>
-    
-    
-    <categories>
-      
-      <category>博客</category>
-      
-    </categories>
-    
-    
-    <tags>
-      
-      <tag>node</tag>
-      
-      <tag>git</tag>
-      
-      <tag>github</tag>
-      
-      <tag>博客</tag>
-      
-    </tags>
-    
-  </entry>
-  
-  
-  
-  <entry>
-    <title>学习录像</title>
-    <link href="/2024/02/08/%E4%B8%80.%20%E5%AD%A6%E4%B9%A0%E8%B7%AF%E7%BA%BF/"/>
-    <url>/2024/02/08/%E4%B8%80.%20%E5%AD%A6%E4%B9%A0%E8%B7%AF%E7%BA%BF/</url>
-    
-    <content type="html"><![CDATA[<p><strong>一. 学习路线</strong></p><p><strong>1. java基础</strong><br>   <a href="https://www.bilibili.com/video/BV1yW4y1Y7Ms/?spm_id_from=333.999.0.0&vd_source=7b65dac64359aba0497d90a84311deb9">最新简短</a></p><p><strong>2. web基础</strong><br>   <a href="https://www.bilibili.com/video/BV1yW4y1Y7Ms/?spm_id_from=333.999.0.0&vd_source=7b65dac64359aba0497d90a84311deb9">web</a></p><blockquote><p>html+js+vue+ajax+Element+maven+http+tomcat+Spring+mysql+mybatis+案例+登录(jwt)+过滤器+拦截器+事务+aop+springboot</p></blockquote><p><strong>3. mysql进阶</strong>(随便一个都可以 建议黑马)<br><a href="https://www.bilibili.com/video/BV1Kr4y1i7ru/?spm_id_from=333.337.search-card.all.click&vd_source=7b65dac64359aba0497d90a84311deb9">进阶一</a></p><blockquote><p>p58-p152</p></blockquote><p><a href="https://www.bilibili.com/video/BV1iq4y1u7vj/?spm_id_from=333.337.search-card.all.click&vd_source=7b65dac64359aba0497d90a84311deb9">进阶二</a></p><blockquote><p>p58-p152</p></blockquote><p><strong>4. 单体项目一</strong><br><a href="https://www.bilibili.com/video/BV1TP411v7v6/?spm_id_from=333.999.0.0&vd_source=7b65dac64359aba0497d90a84311deb9">单体项目</a></p><blockquote><p>全看</p></blockquote><p><strong>5.redis(必看)</strong><br><a href="https://www.bilibili.com/video/BV1cr4y1671t/?spm_id_from=333.337.search-card.all.click&vd_source=7b65dac64359aba0497d90a84311deb9">redis</a></p><blockquote><p> p95前全看  高级篇多级缓存必看</p></blockquote><p><strong>6. 总结一波</strong></p><p><strong>7. springcloud</strong></p><p><a href="https://www.bilibili.com/video/BV1LQ4y127n4/?spm_id_from=333.337.search-card.all.click&vd_source=7b65dac64359aba0497d90a84311deb9">微服务</a></p><blockquote><p>nacos+openfeign(dubbo)+gateway+setea+seata+Sentinel</p></blockquote><p><strong>8. 微服务项目</strong><br><a href="https://www.bilibili.com/video/BV1j8411N7Bm/?spm_id_from=333.337.search-card.all.click&vd_source=7b65dac64359aba0497d90a84311deb9">项目一</a><br><a href="https://www.bilibili.com/video/BV1Qs4y1v7x4/?spm_id_from=333.999.0.0&vd_source=7b65dac64359aba0497d90a84311deb9">项目二</a><br>[网盘韩顺平家具项目]<br><strong>9. 面试</strong></p><p><a href="https://www.bilibili.com/video/BV1yT411H7YK/?spm_id_from=333.999.0.0&vd_source=7b65dac64359aba0497d90a84311deb9">面试</a></p><p><strong>10.说明</strong></p><ul><li>此学习路线应该是不走弯路的最快的视频学习路线了</li><li>途中肯定有来不及学，听不懂的，可以查阅 尚硅谷 韩顺平(非常详细) 对应网课 进行补充</li></ul><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-meta">@Service</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">ExcelProcessServiceImpl</span> <span class="hljs-keyword">implements</span> <span class="hljs-title class_">ExcelProcessService</span> &#123;<br><br>    <span class="hljs-meta">@SneakyThrows</span><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">processExcel</span><span class="hljs-params">(MultipartFile file, HttpServletResponse response)</span>  &#123;<br>        <span class="hljs-comment">//处理账龄划分</span><br>        <span class="hljs-type">ExcelReader</span> <span class="hljs-variable">reader</span> <span class="hljs-operator">=</span> ExcelUtil.getReader(file.getInputStream());<br><br>        List&lt;Map&lt;String, Object&gt;&gt; excelDetails = reader.read(<span class="hljs-number">0</span>, <span class="hljs-number">1</span>, Integer.MAX_VALUE);<br>        <span class="hljs-comment">//每一年账龄map</span><br>        LinkedHashMap&lt;Integer, LinkedHashMap&lt;Integer, String&gt;&gt; accountsAgeMap = <span class="hljs-keyword">new</span> <span class="hljs-title class_">LinkedHashMap</span>&lt;&gt;();<br><br><br>        <span class="hljs-keyword">if</span>(CollUtil.isNotEmpty(excelDetails))&#123;<br>            <span class="hljs-comment">//一行一行处理</span><br>            <span class="hljs-keyword">for</span> (Map&lt;String, Object&gt; excelDetail : excelDetails) &#123;<br>                <span class="hljs-comment">//处理六年--从高到底</span><br>                <span class="hljs-comment">//BigDecimal subtract = debit.subtract(credit).compareTo(BigDecimal.ZERO)&gt;0?debit.subtract(credit):BigDecimal.ZERO;</span><br>                <span class="hljs-comment">//将第一年的借作为基础数据</span><br>                <span class="hljs-type">BigDecimal</span> <span class="hljs-variable">init</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">BigDecimal</span>(excelDetail.get(ExcelConstants.DEBIT+<span class="hljs-number">1</span>).toString());<br><br>                <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> <span class="hljs-variable">i</span> <span class="hljs-operator">=</span> ExcelConstants.FIRST_YEAR; i &lt;= ExcelConstants.LAST_YEAR; i++) &#123;<br>                    <span class="hljs-type">int</span> <span class="hljs-variable">j</span> <span class="hljs-operator">=</span> i - ExcelConstants.DIFF_YEAR;<br>                    <span class="hljs-comment">//基础账目</span><br>                    <span class="hljs-type">BigDecimal</span> <span class="hljs-variable">first</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">BigDecimal</span>(excelDetail.get(String.valueOf(i)).toString());<br>                    <span class="hljs-comment">//当年借贷</span><br>                    <span class="hljs-type">BigDecimal</span> <span class="hljs-variable">debit</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">BigDecimal</span>(excelDetail.get(ExcelConstants.DEBIT + j).toString());<br>                    <span class="hljs-type">BigDecimal</span> <span class="hljs-variable">credit</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">BigDecimal</span>(excelDetail.get(ExcelConstants.CREDIT + j).toString());<br>                    <br>                    <br>                    <span class="hljs-comment">//遍历上年所有账龄 高-&gt;低</span><br>                    LinkedHashMap&lt;Integer, String&gt; yearAccountMap = accountsAgeMap.get(i - <span class="hljs-number">1</span>);<br>                    <span class="hljs-keyword">if</span>(CollUtil.isNotEmpty(yearAccountMap))&#123;<br>                        List&lt;Integer&gt; collect = yearAccountMap.keySet().stream().sorted(Comparator.reverseOrder()).collect(Collectors.toList());<br>                        <span class="hljs-comment">//hasmap转移</span><br>                        LinkedHashMap&lt;Integer, String&gt; nextYearMap = <span class="hljs-keyword">new</span> <span class="hljs-title class_">LinkedHashMap</span>&lt;Integer, String&gt;();<br>                        <span class="hljs-keyword">for</span> (Integer num : collect) &#123;<br>                            nextYearMap.put(num+<span class="hljs-number">1</span>,yearAccountMap.get(num));<br>                        &#125;<br>                        <span class="hljs-comment">//加入当前年份借方</span><br>                        nextYearMap.put(<span class="hljs-number">1</span>,debit.toString());<br>                        List&lt;Integer&gt; nextYearColl = nextYearMap.keySet().stream().sorted(Comparator.reverseOrder()).collect(Collectors.toList());<br>                        <span class="hljs-comment">//从高到低</span><br>                        <span class="hljs-type">BigDecimal</span> <span class="hljs-variable">zero</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">BigDecimal</span>(credit.toString());<br><br>                        <span class="hljs-keyword">for</span> (Integer num : nextYearColl) &#123;<br>                            <span class="hljs-comment">//去年最大账目</span><br>                            <span class="hljs-type">BigDecimal</span> <span class="hljs-variable">oldAcc</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">BigDecimal</span>(nextYearMap.get(num).toString());<br>                            <span class="hljs-comment">//差值</span><br>                            <span class="hljs-type">BigDecimal</span> <span class="hljs-variable">subtract</span> <span class="hljs-operator">=</span> zero.subtract(oldAcc);<br>                            <span class="hljs-comment">//比较大小</span><br>                            <span class="hljs-type">int</span> <span class="hljs-variable">compare</span> <span class="hljs-operator">=</span> subtract.compareTo(BigDecimal.ZERO);<br>                            <span class="hljs-keyword">if</span>(compare&gt;<span class="hljs-number">0</span>)&#123;<br>                                <span class="hljs-comment">//还完了最后一年还剩余</span><br>                                zero = subtract;<br>                                nextYearMap.remove(num);<br>                            &#125;<span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (compare==<span class="hljs-number">0</span>)&#123;<br>                                <span class="hljs-comment">//刚好抵消</span><br>                                nextYearMap.remove(num);<br>                                <span class="hljs-keyword">break</span>;<br>                            &#125;<span class="hljs-keyword">else</span> &#123;<br>                                <span class="hljs-comment">//不够还</span><br>                                nextYearMap.put(num,subtract.negate().toString());<br>                                <span class="hljs-keyword">break</span>;<br>                            &#125;<br>                        &#125;<br>                        accountsAgeMap.put(i, nextYearMap);<br>                    &#125;<span class="hljs-keyword">else</span> &#123;<br>                        <span class="hljs-comment">//第一年</span><br>                        LinkedHashMap&lt;Integer, String&gt; map = <span class="hljs-keyword">new</span> <span class="hljs-title class_">LinkedHashMap</span>&lt;Integer, String&gt;();<br>                        map.put(<span class="hljs-number">1</span>,debit.subtract(credit).toString());<br>                                accountsAgeMap.put(i, map);<br>                    &#125;<br>                    LinkedHashMap&lt;Integer, String&gt; tatolMap = accountsAgeMap.get(i);<br>                    <span class="hljs-type">BigDecimal</span>  <span class="hljs-variable">tatol</span> <span class="hljs-operator">=</span> BigDecimal.ZERO;<br>                    <span class="hljs-keyword">if</span>(CollUtil.isNotEmpty(tatolMap.keySet()))&#123;<br>                        <span class="hljs-keyword">for</span> (Integer num : tatolMap.keySet()) &#123;<br>                            <span class="hljs-comment">//去年最大账目</span><br>                            <span class="hljs-type">BigDecimal</span> <span class="hljs-variable">oldAcc</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">BigDecimal</span>(tatolMap.get(num).toString());<br>                            tatol = tatol.add(oldAcc);<br>                        &#125;<br>                    &#125;<br>                    excelDetail.put(String.valueOf(i),tatol.toString());<br>                &#125;   <span class="hljs-comment">//组装map</span><br>                LinkedHashMap&lt;Integer, String&gt; last = accountsAgeMap.get(ExcelConstants.LAST_YEAR);<br>                <span class="hljs-keyword">if</span>(CollUtil.isNotEmpty(last))&#123;<br>                    Set&lt;Integer&gt; integers = last.keySet();<br>                    <span class="hljs-keyword">for</span> (Integer integer : integers) &#123;<br>                        <span class="hljs-type">String</span> <span class="hljs-variable">codeByNum</span> <span class="hljs-operator">=</span> YearEnum.getCodeByNum(integer);<br>                        excelDetail.put(codeByNum,last.get(integer));<br>                    &#125;<br>                &#125;<br><br>            &#125;<br>            <span class="hljs-type">ExcelWriter</span> <span class="hljs-variable">writer</span> <span class="hljs-operator">=</span> ExcelUtil.getWriter();<br>            writer.write(excelDetails, <span class="hljs-literal">true</span>);<br><br>            <span class="hljs-comment">//通过工具类创建writer</span><br>            response.setContentType(<span class="hljs-string">&quot;application/vnd.ms-excel;charset=utf-8&quot;</span>);<br>            response.setHeader(<span class="hljs-string">&quot;Content-disposition&quot;</span>, <span class="hljs-string">&quot;attachment; filename=&quot;</span> + URLEncoder.encode(<span class="hljs-string">&quot;账龄划分&quot;</span> + DateUtil.today() + <span class="hljs-string">&quot;.xls&quot;</span>, <span class="hljs-string">&quot;utf-8&quot;</span>));<br><br>            <span class="hljs-type">ServletOutputStream</span> <span class="hljs-variable">out</span> <span class="hljs-operator">=</span> response.getOutputStream();<br>            writer.flush(out, <span class="hljs-literal">true</span>);<br>            writer.close();<br>            IoUtil.close(out);<br><br>        &#125;<br><br>    &#125;<br><br>&#125;<br><br></code></pre></td></tr></table></figure>]]></content>
-    
-    
-    <categories>
-      
-      <category>博客搭建</category>
-      
-    </categories>
-    
-    
-    <tags>
-      
-      <tag>博客搭建</tag>
-      
-      <tag>node</tag>
-      
-      <tag>git</tag>
-      
-      <tag>github</tag>
-      
-    </tags>
-    
-  </entry>
-  
-  
-  
-  <entry>
-    <title>Hello World</title>
-    <link href="/2024/02/08/hello-world%20-%20%E5%89%AF%E6%9C%AC%20-%20%E5%89%AF%E6%9C%AC/"/>
-    <url>/2024/02/08/hello-world%20-%20%E5%89%AF%E6%9C%AC%20-%20%E5%89%AF%E6%9C%AC/</url>
-    
-    <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p><h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p><h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p><h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p><h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>]]></content>
-    
-    
-    
-  </entry>
-  
-  
-  
-  <entry>
-    <title>Hello World</title>
-    <link href="/2024/02/08/hello-world%20-%20%E5%89%AF%E6%9C%AC/"/>
-    <url>/2024/02/08/hello-world%20-%20%E5%89%AF%E6%9C%AC/</url>
-    
-    <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p><h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p><h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p><h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p><h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>]]></content>
-    
-    
-    
-  </entry>
-  
-  
-  
-  <entry>
-    <title>Hello World</title>
-    <link href="/2024/02/07/hello-world/"/>
-    <url>/2024/02/07/hello-world/</url>
-    
-    <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p><h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo new <span class="hljs-string">&quot;My New Post&quot;</span><br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p><h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo server<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p><h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo generate<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p><h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo deploy<br></code></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>]]></content>
-    
-    
-    <categories>
-      
-      <category>博客</category>
-      
-    </categories>
-    
-    
-    <tags>
-      
-      <tag>node</tag>
-      
-      <tag>git</tag>
-      
-      <tag>github</tag>
-      
-      <tag>博客</tag>
       
     </tags>
     

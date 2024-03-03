@@ -16,24 +16,26 @@
   <meta name="author" content="coder刘">
   <meta name="keywords" content="">
   
-    <meta name="description" content="宗旨约定&gt;配置&gt;编码  一.配置要求1234mysql 8.0+ spring boot 3.2.0maven 3.9.0jdk 17  二.相关组件1234567注册服务与发现:Nacos服务调用与负载均衡:OpenFeign&#x2F;LoadBalancer分布式事务:Seata服务熔断和降级:Circuit Breaker(理念)-&gt;Resilience4J(实现)&#x2F;Sentine">
+    <meta name="description" content="LoadBalancer负载均衡与服务调用 背景:Ribbon不在维护了，LoadBalancer是基于客户端的负载均衡的组件将用户的请求尽量平坦到各个服务器上，以达到平坦压力的作用   服务器端的负载和客户端的负载 以最经典的nginx为例，服务器负载，会接受所有的请求，根据 负载均衡算法将请求平坦到各个服务 客户端的负载是指，消费方会先使用负载均衡器从注册中心拉取提供方的实例，根据负载均衡策略">
 <meta property="og:type" content="article">
-<meta property="og:title" content="1.1  深入Spring Cloud 与 Spring Cloud Alibaba --序言">
-<meta property="og:url" content="https://llzkjfl.github.io/2024/02/28/1.1.1%E5%BE%AE%E6%9C%8D%E5%8A%A1/index.html">
+<meta property="og:title" content="3.1 负载均衡LoadBalancer">
+<meta property="og:url" content="https://llzkjfl.github.io/2024/03/03/1.3.1%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E4%B8%8E%E6%9C%8D%E5%8A%A1%E8%B0%83%E7%94%A8/index.html">
 <meta property="og:site_name" content="正流离">
-<meta property="og:description" content="宗旨约定&gt;配置&gt;编码  一.配置要求1234mysql 8.0+ spring boot 3.2.0maven 3.9.0jdk 17  二.相关组件1234567注册服务与发现:Nacos服务调用与负载均衡:OpenFeign&#x2F;LoadBalancer分布式事务:Seata服务熔断和降级:Circuit Breaker(理念)-&gt;Resilience4J(实现)&#x2F;Sentine">
+<meta property="og:description" content="LoadBalancer负载均衡与服务调用 背景:Ribbon不在维护了，LoadBalancer是基于客户端的负载均衡的组件将用户的请求尽量平坦到各个服务器上，以达到平坦压力的作用   服务器端的负载和客户端的负载 以最经典的nginx为例，服务器负载，会接受所有的请求，根据 负载均衡算法将请求平坦到各个服务 客户端的负载是指，消费方会先使用负载均衡器从注册中心拉取提供方的实例，根据负载均衡策略">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://llzkjfl.github.io/assets/image-20240229002608785.png">
-<meta property="article:published_time" content="2024-02-28T14:37:33.871Z">
-<meta property="article:modified_time" content="2024-03-03T15:19:14.626Z">
+<meta property="og:image" content="https://llzkjfl.github.io/assets/image-20240303213423250.png">
+<meta property="og:image" content="https://llzkjfl.github.io/assets/image-20240303214214332.png">
+<meta property="article:published_time" content="2024-03-03T15:22:52.050Z">
+<meta property="article:modified_time" content="2024-03-03T15:23:15.866Z">
 <meta property="article:author" content="coder刘">
-<meta property="article:tag" content="微服务">
+<meta property="article:tag" content="服务调用">
+<meta property="article:tag" content="负载均衡">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://llzkjfl.github.io/assets/image-20240229002608785.png">
+<meta name="twitter:image" content="https://llzkjfl.github.io/assets/image-20240303213423250.png">
   
   
   
-  <title>1.1  深入Spring Cloud 与 Spring Cloud Alibaba --序言 - 正流离</title>
+  <title>3.1 负载均衡LoadBalancer - 正流离</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -199,7 +201,7 @@
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="1.1  深入Spring Cloud 与 Spring Cloud Alibaba --序言"></span>
+            <span id="subtitle" data-typed-text="3.1 负载均衡LoadBalancer"></span>
           
         </div>
 
@@ -210,8 +212,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2024-02-28 22:37" pubdate>
-          2024年2月28日 晚上
+        <time datetime="2024-03-03 23:22" pubdate>
+          2024年3月3日 晚上
         </time>
       </span>
     
@@ -222,7 +224,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          445 字
+          578 字
         
       </span>
     
@@ -233,7 +235,7 @@
         
         
         
-          4 分钟
+          5 分钟
         
       </span>
     
@@ -270,33 +272,72 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">1.1  深入Spring Cloud 与 Spring Cloud Alibaba --序言</h1>
+            <h1 id="seo-header">3.1 负载均衡LoadBalancer</h1>
             
             
               <div class="markdown-body">
                 
-                <h3 id="宗旨"><a href="#宗旨" class="headerlink" title="宗旨"></a>宗旨</h3><p><mark>约定&gt;配置&gt;编码 </mark></p>
-<h3 id="一-配置要求"><a href="#一-配置要求" class="headerlink" title="一.配置要求"></a>一.配置要求</h3><figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">mysql</span> <span class="hljs-number">8</span>.<span class="hljs-number">0</span>+ <br><span class="hljs-attribute">spring</span> boot <span class="hljs-number">3</span>.<span class="hljs-number">2</span>.<span class="hljs-number">0</span><br><span class="hljs-attribute">maven</span> <span class="hljs-number">3</span>.<span class="hljs-number">9</span>.<span class="hljs-number">0</span><br><span class="hljs-attribute">jdk</span> <span class="hljs-number">17</span><br></code></pre></td></tr></table></figure>
-
-<h3 id="二-相关组件"><a href="#二-相关组件" class="headerlink" title="二.相关组件"></a>二.相关组件</h3><figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs elixir">注册服务与发现<span class="hljs-symbol">:Nacos</span><br>服务调用与负载均衡<span class="hljs-symbol">:OpenFeign/LoadBalancer</span><br>分布式事务<span class="hljs-symbol">:Seata</span><br>服务熔断和降级<span class="hljs-symbol">:Circuit</span> <span class="hljs-title class_">Breaker</span>(理念)-&gt;<span class="hljs-title class_">Resilience4J</span>(实现)/<span class="hljs-title class_">Sentinel</span><br>服务链路追踪<span class="hljs-symbol">:Micrometer</span> <span class="hljs-title class_">Tracing</span><br>服务网关<span class="hljs-symbol">:Gateway</span><br>分布式配置管理<span class="hljs-symbol">:Nacos</span><br></code></pre></td></tr></table></figure>
-
-<h3 id="三-父工程pom"><a href="#三-父工程pom" class="headerlink" title="三.父工程pom"></a>三.父工程pom</h3><ul>
-<li><strong>注意dependencyManagement的作用(父申明,子引用)</strong><figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-section">&lt;properties&gt;</span><br>    <span class="hljs-section">&lt;maven.compiler.source&gt;</span><span class="hljs-attribute">17</span>&lt;/maven.compiler.source&gt;<br>    <span class="hljs-section">&lt;maven.compiler.target&gt;</span><span class="hljs-attribute">17</span>&lt;/maven.compiler.target&gt;<br>    <span class="hljs-section">&lt;project.build.sourceEncoding&gt;</span><span class="hljs-attribute">UTF</span>-<span class="hljs-number">8</span>&lt;/project.build.sourceEncoding&gt;<br>    <span class="hljs-section">&lt;hutool.version&gt;</span><span class="hljs-attribute">5</span>.<span class="hljs-number">8</span>.<span class="hljs-number">22</span>&lt;/hutool.version&gt;<br>    <span class="hljs-section">&lt;lombok.version&gt;</span><span class="hljs-attribute">1</span>.<span class="hljs-number">18</span>.<span class="hljs-number">26</span>&lt;/lombok.version&gt;<br>    <span class="hljs-section">&lt;druid.version&gt;</span><span class="hljs-attribute">1</span>.<span class="hljs-number">1</span>.<span class="hljs-number">20</span>&lt;/druid.version&gt;<br>    <span class="hljs-section">&lt;mybatis.springboot.version&gt;</span><span class="hljs-attribute">3</span>.<span class="hljs-number">0</span>.<span class="hljs-number">2</span>&lt;/mybatis.springboot.version&gt;<br>    <span class="hljs-section">&lt;mysql.version&gt;</span><span class="hljs-attribute">8</span>.<span class="hljs-number">0</span>.<span class="hljs-number">11</span>&lt;/mysql.version&gt;<br>    <span class="hljs-section">&lt;swagger3.version&gt;</span><span class="hljs-attribute">2</span>.<span class="hljs-number">2</span>.<span class="hljs-number">0</span>&lt;/swagger3.version&gt;<br>    <span class="hljs-section">&lt;mapper.version&gt;</span><span class="hljs-attribute">4</span>.<span class="hljs-number">2</span>.<span class="hljs-number">3</span>&lt;/mapper.version&gt;<br>    <span class="hljs-section">&lt;fastjson2.version&gt;</span><span class="hljs-attribute">2</span>.<span class="hljs-number">0</span>.<span class="hljs-number">40</span>&lt;/fastjson2.version&gt;<br>    <span class="hljs-section">&lt;persistence-api.version&gt;</span><span class="hljs-attribute">1</span>.<span class="hljs-number">0</span>.<span class="hljs-number">2</span>&lt;/persistence-api.version&gt;<br>    <span class="hljs-section">&lt;spring.boot.test.version&gt;</span><span class="hljs-attribute">3</span>.<span class="hljs-number">1</span>.<span class="hljs-number">5</span>&lt;/spring.boot.test.version&gt;<br>    <span class="hljs-section">&lt;spring.boot.version&gt;</span><span class="hljs-attribute">3</span>.<span class="hljs-number">2</span>.<span class="hljs-number">0</span>&lt;/spring.boot.version&gt;<br>    <span class="hljs-section">&lt;spring.cloud.version&gt;</span><span class="hljs-attribute">2023</span>.<span class="hljs-number">0</span>.<span class="hljs-number">0</span>&lt;/spring.cloud.version&gt;<br>    <span class="hljs-section">&lt;spring.cloud.alibaba.version&gt;</span><span class="hljs-attribute">2022</span>.<span class="hljs-number">0</span>.<span class="hljs-number">0</span>.<span class="hljs-number">0</span>-RC2&lt;/spring.cloud.alibaba.version&gt;<br><span class="hljs-section">&lt;/properties&gt;</span><br></code></pre></td></tr></table></figure></li>
+                <h2 id="LoadBalancer负载均衡与服务调用"><a href="#LoadBalancer负载均衡与服务调用" class="headerlink" title="LoadBalancer负载均衡与服务调用"></a>LoadBalancer负载均衡与服务调用</h2><blockquote>
+<p>背景:Ribbon不在维护了，LoadBalancer是基于客户端的负载均衡的组件将用户的请求尽量平坦到各个服务器上，以达到平坦压力的作用</p>
+</blockquote>
+<ul>
+<li><mark>服务器端的负载和客户端的负载</mark><ul>
+<li>以最经典的nginx为例，服务器负载，会接受所有的请求，根据 <u>负载均衡算法</u>将请求平坦到各个服务</li>
+<li>客户端的负载是指，消费方会先使用负载均衡器从注册中心拉取提供方的实例，根据<u>负载均衡策略</u>自主的选择服务器</li>
 </ul>
-<h3 id="四-基础表及代码生成"><a href="#四-基础表及代码生成" class="headerlink" title="四.基础表及代码生成"></a>四.基础表及代码生成</h3><ol>
-<li><p>数据库创建表t_pay</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs sql"><br><span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">TABLE</span> `t_pay`<br>(<br>    `id`          <span class="hljs-type">INT</span>(<span class="hljs-number">10</span>) UNSIGNED    <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">NULL</span> AUTO_INCREMENT,<br>    `pay_no`      <span class="hljs-type">VARCHAR</span>(<span class="hljs-number">50</span>)         <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">NULL</span> COMMENT <span class="hljs-string">&#x27;支付流水号&#x27;</span>,<br>    `order_no`    <span class="hljs-type">VARCHAR</span>(<span class="hljs-number">50</span>)         <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">NULL</span> COMMENT <span class="hljs-string">&#x27;订单流水号&#x27;</span>,<br>    `user_id`     <span class="hljs-type">INT</span>(<span class="hljs-number">10</span>)                      <span class="hljs-keyword">DEFAULT</span> <span class="hljs-string">&#x27;1&#x27;</span> COMMENT <span class="hljs-string">&#x27;用户账号ID&#x27;</span>,<br>    `amount`      <span class="hljs-type">DECIMAL</span>(<span class="hljs-number">8</span>, <span class="hljs-number">2</span>)       <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">NULL</span> <span class="hljs-keyword">DEFAULT</span> <span class="hljs-string">&#x27;9.9&#x27;</span> COMMENT <span class="hljs-string">&#x27;交易金额&#x27;</span>,<br>    `deleted`     TINYINT(<span class="hljs-number">4</span>) UNSIGNED <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">NULL</span> <span class="hljs-keyword">DEFAULT</span> <span class="hljs-string">&#x27;0&#x27;</span> COMMENT <span class="hljs-string">&#x27;删除标志，默认0不删除，1删除&#x27;</span>,<br>    `create_time` <span class="hljs-type">TIMESTAMP</span>           <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">NULL</span> <span class="hljs-keyword">DEFAULT</span> <span class="hljs-built_in">CURRENT_TIMESTAMP</span> COMMENT <span class="hljs-string">&#x27;创建时间&#x27;</span>,<br>    `update_time` <span class="hljs-type">TIMESTAMP</span>           <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">NULL</span> <span class="hljs-keyword">DEFAULT</span> <span class="hljs-built_in">CURRENT_TIMESTAMP</span> <span class="hljs-keyword">ON</span> <span class="hljs-keyword">UPDATE</span> <span class="hljs-built_in">CURRENT_TIMESTAMP</span> COMMENT <span class="hljs-string">&#x27;更新时间&#x27;</span>,<br>    <span class="hljs-keyword">PRIMARY</span> KEY (`id`)<br><br>) ENGINE <span class="hljs-operator">=</span> INNODB<br>  AUTO_INCREMENT <span class="hljs-operator">=</span> <span class="hljs-number">1</span><br>  <span class="hljs-keyword">DEFAULT</span> CHARSET <span class="hljs-operator">=</span> utf8mb4 COMMENT <span class="hljs-operator">=</span><span class="hljs-string">&#x27;支付交易表&#x27;</span>;<br></code></pre></td></tr></table></figure>
-
-
 </li>
-<li><p>新建generator模块自动生成代码</p>
+</ul>
+<h4 id="一-基本信息"><a href="#一-基本信息" class="headerlink" title="一.基本信息"></a>一.基本信息</h4><ol>
+<li><p><a target="_blank" rel="noopener" href="https://docs.spring.io/spring-cloud-commons/reference/spring-cloud-commons/loadbalancer.html">LoadBalancer官网</a></p>
+</li>
+<li><p>配置使用</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-meta">@Configuration</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">RestTemplateConfig</span> &#123;<br>    <span class="hljs-meta">@Bean</span><br>    <span class="hljs-meta">@LoadBalanced</span><br>    <span class="hljs-keyword">public</span> RestTemplate <span class="hljs-title function_">restTemplate</span><span class="hljs-params">()</span><br>    &#123;<br>        <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">RestTemplate</span>();<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure></li>
+<li><p>新增多个服务实例 8001&#x2F;8002 分别注册到consul上</p>
+</li>
+<li><p>服务消费端注入loadBalancer依赖</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs pom">&lt;dependency&gt;<br>   &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;<br>   &lt;artifactId&gt;spring-cloud-starter-loadbalancer&lt;/artifactId&gt;<br>&lt;/dependency&gt;<br></code></pre></td></tr></table></figure>
+</li>
+<li><p>调用消费者接口，发现提供者被一次调用</p>
 </li>
 </ol>
-<ul>
-<li>效果</li>
+<h4 id="二-负载均衡原理"><a href="#二-负载均衡原理" class="headerlink" title="二.负载均衡原理"></a>二.负载均衡原理</h4><h5 id="客户端负载原理"><a href="#客户端负载原理" class="headerlink" title="客户端负载原理"></a>客户端负载原理</h5><ul>
+<li>当消费者消费(多实例)提供者时，使用DiscoveryClient 对象获取注册中心对应服务的实例列表，通过负载均衡算法获取合适的实例<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">serviceUrl</span><span class="hljs-params">()</span> &#123;<br>    <span class="hljs-comment">//获取所有的服务</span><br>    List&lt;String&gt; services = discoveryClient.getServices();<br>    <span class="hljs-keyword">for</span> (String service : services) &#123;<br>        System.out.println(service);<br>    &#125;<br>    System.out.println(<span class="hljs-string">&quot;========================================&quot;</span>);<br>    <span class="hljs-comment">//获取指定服务的实例</span><br>    List&lt;ServiceInstance&gt; list = discoveryClient.getInstances(<span class="hljs-string">&quot;cloud-payment-service&quot;</span>);<br>    <span class="hljs-keyword">if</span> (list != <span class="hljs-literal">null</span> &amp;&amp; list.size() &gt; <span class="hljs-number">0</span>) &#123;<br>        <span class="hljs-keyword">for</span> (ServiceInstance serviceInstance : list) &#123;<br>            System.out.println(serviceInstance.getServiceId()<br>                    + <span class="hljs-string">&quot; &quot;</span> + serviceInstance.getHost()<br>                    + <span class="hljs-string">&quot; &quot;</span> +serviceInstance.getPort()<br>                    + <span class="hljs-string">&quot; &quot;</span> +serviceInstance.getUri());<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure></li>
+<li>结果为</li>
+<li><img src="/./../assets/image-20240303213423250.png" srcset="/img/loading.gif" lazyload alt="image-20240303213423250"></li>
 </ul>
-<p><img src="/./../assets/image-20240229002608785.png" srcset="/img/loading.gif" lazyload alt="image-20240229002608785"></p>
+<h5 id="负载均衡算法"><a href="#负载均衡算法" class="headerlink" title="负载均衡算法"></a>负载均衡算法</h5><ul>
+<li><p>原理：继承ReactiveLoadBalancer接口</p>
+</li>
+<li><p><img src="/./../assets/image-20240303214214332.png" srcset="/img/loading.gif" lazyload alt="image-20240303214214332"></p>
+</li>
+<li><p>默认的算法为轮询，将接口请求此处对服务实例个数取模，得到对应的实例序号</p>
+</li>
+<li><p>其他轮询算法</p>
+<ul>
+<li><p>随机</p>
+</li>
+<li><pre><code class="hljs">public class CustomLoadBalancerConfiguration &#123;
 
+    @Bean
+    ReactorLoadBalancer&lt;ServiceInstance&gt; randomLoadBalancer(Environment environment,
+            LoadBalancerClientFactory loadBalancerClientFactory) &#123;
+        String name = environment.getProperty(LoadBalancerClientFactory.PROPERTY_NAME);
+        return new RandomLoadBalancer(loadBalancerClientFactory
+                .getLazyProvider(name, ServiceInstanceListSupplier.class),
+                name);
+    &#125;
+&#125;
+</code></pre>
+</li>
+</ul>
+</li>
+</ul>
+<h5 id="算法切换"><a href="#算法切换" class="headerlink" title="算法切换"></a>算法切换</h5><ul>
+<li>切换随机轮询算法      改变RestTemplateConfig配置类</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-meta">@Configuration</span><br><span class="hljs-meta">@LoadBalancerClient(</span><br><span class="hljs-meta">        //下面的value值大小写一定要和consul里面的名字一样，必须一样</span><br><span class="hljs-meta">        value = &quot;cloud-payment-service&quot;,configuration = RestTemplateConfig.class)</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">RestTemplateConfig</span><br>&#123;<br>    <span class="hljs-meta">@Bean</span><br>    <span class="hljs-meta">@LoadBalanced</span> <span class="hljs-comment">//使用@LoadBalanced注解赋予RestTemplate负载均衡的能力</span><br>    <span class="hljs-keyword">public</span> RestTemplate <span class="hljs-title function_">restTemplate</span><span class="hljs-params">()</span>&#123;<br>        <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">RestTemplate</span>();<br>    &#125;<br><br>    <span class="hljs-comment">//官方源码</span><br>    <span class="hljs-meta">@Bean</span><br>    ReactorLoadBalancer&lt;ServiceInstance&gt; <span class="hljs-title function_">randomLoadBalancer</span><span class="hljs-params">(Environment environment,</span><br><span class="hljs-params">                                                            LoadBalancerClientFactory loadBalancerClientFactory)</span> &#123;<br>        <span class="hljs-type">String</span> <span class="hljs-variable">name</span> <span class="hljs-operator">=</span> environment.getProperty(LoadBalancerClientFactory.PROPERTY_NAME);<br><br>        <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">RandomLoadBalancer</span>(loadBalancerClientFactory.getLazyProvider(name, ServiceInstanceListSupplier.class), name);<br>    &#125;<br>&#125;<br><br></code></pre></td></tr></table></figure>
+
+<h2 id="完"><a href="#完" class="headerlink" title="完"></a>完</h2>
                 
               </div>
             
@@ -329,7 +370,9 @@
     <div class="post-meta">
       <i class="iconfont icon-tags"></i>
       
-        <a href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" class="print-no-link">#微服务</a>
+        <a href="/tags/%E6%9C%8D%E5%8A%A1%E8%B0%83%E7%94%A8/" class="print-no-link">#服务调用</a>
+      
+        <a href="/tags/%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1/" class="print-no-link">#负载均衡</a>
       
     </div>
   
@@ -341,8 +384,8 @@
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>1.1  深入Spring Cloud 与 Spring Cloud Alibaba --序言</div>
-      <div>https://llzkjfl.github.io/2024/02/28/1.1.1微服务/</div>
+      <div>3.1 负载均衡LoadBalancer</div>
+      <div>https://llzkjfl.github.io/2024/03/03/1.3.1负载均衡与服务调用/</div>
     </div>
     <div class="license-meta">
       
@@ -354,7 +397,7 @@
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2024年2月28日</div>
+          <div>2024年3月3日</div>
         </div>
       
       
@@ -386,15 +429,21 @@
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2024/03/03/1.2.1%E6%9C%8D%E5%8A%A1%E6%B3%A8%E5%86%8C%E4%B8%AD%E5%BF%83%E2%80%94%E2%80%94Consul/" title="2.1  注册配置中心Consul">
+                      <a href="/2024/03/03/1.3.2%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E4%B8%8E%E6%9C%8D%E5%8A%A1%E8%B0%83%E7%94%A8/" title="3.2 服务调用与负载均衡——OpenFeign">
                         <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">2.1  注册配置中心Consul</span>
+                        <span class="hidden-mobile">3.2 服务调用与负载均衡——OpenFeign</span>
                         <span class="visible-mobile">上一篇</span>
                       </a>
                     
                   </article>
                   <article class="post-next col-6">
                     
+                    
+                      <a href="/2024/03/03/1.2.1%E6%9C%8D%E5%8A%A1%E6%B3%A8%E5%86%8C%E4%B8%AD%E5%BF%83%E2%80%94%E2%80%94Consul/" title="2.1  注册配置中心Consul">
+                        <span class="hidden-mobile">2.1  注册配置中心Consul</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
                     
                   </article>
                 </div>
